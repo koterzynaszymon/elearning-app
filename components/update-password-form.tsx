@@ -33,8 +33,7 @@ export function UpdatePasswordForm({
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
-      // Update this route to redirect to an authenticated route. The user already has an active session.
-      router.push("/protected");
+      router.push("/dashboard");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
@@ -44,16 +43,18 @@ export function UpdatePasswordForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Reset Your Password</CardTitle>
+      <Card className="border-border/70 shadow-glow">
+        <CardHeader className="space-y-1.5">
+          <CardTitle className="text-2xl tracking-tight">
+            Set a new password
+          </CardTitle>
           <CardDescription>
-            Please enter your new password below.
+            Choose a strong password to secure your account.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleForgotPassword}>
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-5">
               <div className="grid gap-2">
                 <Label htmlFor="password">New password</Label>
                 <Input
@@ -61,12 +62,21 @@ export function UpdatePasswordForm({
                   type="password"
                   placeholder="New password"
                   required
+                  className="h-11"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              {error && (
+                <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                  {error}
+                </p>
+              )}
+              <Button
+                type="submit"
+                className="h-11 w-full text-base"
+                disabled={isLoading}
+              >
                 {isLoading ? "Saving..." : "Save new password"}
               </Button>
             </div>

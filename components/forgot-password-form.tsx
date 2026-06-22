@@ -47,53 +47,65 @@ export function ForgotPasswordForm({
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       {success ? (
-        <Card>
+        <Card className="border-border/70 shadow-glow">
           <CardHeader>
-            <CardTitle className="text-2xl">Check Your Email</CardTitle>
+            <CardTitle className="text-2xl tracking-tight">
+              Check your email
+            </CardTitle>
             <CardDescription>Password reset instructions sent</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
-              If you registered using your email and password, you will receive
-              a password reset email.
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              If an account exists for that address, you&apos;ll receive a
+              password reset email shortly.
             </p>
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Reset Your Password</CardTitle>
+        <Card className="border-border/70 shadow-glow">
+          <CardHeader className="space-y-1.5">
+            <CardTitle className="text-2xl tracking-tight">
+              Reset your password
+            </CardTitle>
             <CardDescription>
-              Type in your email and we&apos;ll send you a link to reset your
-              password
+              Enter your email and we&apos;ll send you a reset link.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleForgotPassword}>
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-5">
                 <div className="grid gap-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
                     type="email"
-                    placeholder="m@example.com"
+                    placeholder="you@example.com"
                     required
+                    className="h-11"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
-                {error && <p className="text-sm text-red-500">{error}</p>}
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Sending..." : "Send reset email"}
+                {error && (
+                  <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                    {error}
+                  </p>
+                )}
+                <Button
+                  type="submit"
+                  className="h-11 w-full text-base"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Sending..." : "Send reset link"}
                 </Button>
               </div>
-              <div className="mt-4 text-center text-sm">
-                Already have an account?{" "}
+              <div className="mt-6 text-center text-sm text-muted-foreground">
+                Remembered it?{" "}
                 <Link
                   href="/auth/login"
-                  className="underline underline-offset-4"
+                  className="font-medium text-primary underline-offset-4 hover:underline"
                 >
-                  Login
+                  Sign in
                 </Link>
               </div>
             </form>
