@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   BookOpen,
   CheckCircle2,
@@ -5,106 +6,177 @@ import {
   GraduationCap,
   Plus,
   Sparkles,
-  UserPlus,
+  Ticket,
+  ArrowRight,
 } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 
 interface Stat {
-  label: string;
-  value: string;
-  icon: React.ComponentType<{ className?: string }>;
+  readonly label: string;
+  readonly value: string;
+  readonly icon: React.ComponentType<{ className?: string }>;
+  readonly tint: string;
 }
 
 const STATS: readonly Stat[] = [
-  { label: "Enrolled courses", value: "0", icon: BookOpen },
-  { label: "In progress", value: "0", icon: Clock },
-  { label: "Completed", value: "0", icon: CheckCircle2 },
-  { label: "Hours this week", value: "0", icon: GraduationCap },
+  {
+    label: "Courses enrolled",
+    value: "0",
+    icon: BookOpen,
+    tint: "bg-primary/10 text-primary",
+  },
+  {
+    label: "In progress",
+    value: "0",
+    icon: Clock,
+    tint: "bg-mint/15 text-mint",
+  },
+  {
+    label: "Completed",
+    value: "0",
+    icon: CheckCircle2,
+    tint: "bg-amber-400/15 text-amber-600 dark:text-amber-400",
+  },
 ];
 
-export default function DashboardPage(): React.JSX.Element {
+const STEPS: readonly { readonly title: string; readonly hint: string }[] = [
+  { title: "Join or create a course", hint: "This is your very first step." },
+  { title: "Complete your profile", hint: "Add a name and a photo." },
+  { title: "Finish your first lesson", hint: "Small wins add up fast." },
+];
+
+function friendlyName(email: string): string {
+  const handle = email.split("@")[0] ?? "there";
+  return handle.charAt(0).toUpperCase() + handle.slice(1);
+}
+
+export default async function DashboardPage(): Promise<React.JSX.Element> {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  const email =
+    typeof data?.claims?.email === "string" ? data.claims.email : "there@lumen";
+  const name = friendlyName(email);
+
   return (
     <div className="flex flex-col gap-8">
-      {/* Header */}
-      <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
-            Your learning space
-          </span>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="mt-1 text-muted-foreground">
-            Track your courses and pick up right where you left off.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" className="h-11">
-            <UserPlus className="h-4 w-4" />
-            Join a course
-          </Button>
-          <Button className="group h-11">
-            <Plus className="h-4 w-4 transition-transform group-hover:rotate-90" />
-            Create a course
-          </Button>
-        </div>
+      {/* Greeting */}
+      <header className="animate-pop">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-xs font-bold text-secondary-foreground">
+          <Sparkles className="h-3.5 w-3.5 text-primary" />
+          Ready to learn?
+        </span>
+        <h1 className="mt-3 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">
+          Hi again, <span className="text-gradient-brand">{name}</span>!
+        </h1>
+        <p className="mt-2 max-w-md text-base text-muted-foreground">
+          You don&apos;t have any courses yet — let&apos;s find you something
+          great to learn.
+        </p>
       </header>
 
-      {/* Stats */}
-      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {STATS.map(({ label, value, icon: Icon }) => (
-          <Card
-            key={label}
-            className="flex items-center gap-4 p-5 transition-colors hover:border-primary/40"
-          >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <Icon className="h-5 w-5" />
-            </span>
-            <div className="min-w-0">
-              <p className="text-2xl font-bold tabular-nums leading-none">
-                {value}
-              </p>
-              <p className="mt-1 truncate text-xs text-muted-foreground">
-                {label}
-              </p>
-            </div>
-          </Card>
-        ))}
-      </section>
+      {/* Welcome hero + getting started */}
+      <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+        {/* Friendly empty-state hero (the only place the actions live) */}
+        <section className="animate-pop relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-brand-50 to-accent/50 p-8 shadow-soft [animation-delay:80ms] sm:p-10 dark:from-card dark:to-accent/20">
+          <div
+            aria-hidden
+            className="bg-dots mask-radial-fade pointer-events-none absolute inset-0 opacity-70"
+          />
 
-      {/* My courses */}
-      <section className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold tracking-tight">My courses</h2>
-        </div>
-
-        {/* Empty state — replace with a course card grid once data is wired */}
-        <Card className="relative overflow-hidden border-dashed">
-          <div className="bg-grid mask-radial-fade pointer-events-none absolute inset-0 opacity-40" />
-          <div className="relative flex flex-col items-center justify-center gap-4 px-6 py-16 text-center">
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-sky-400 text-primary-foreground shadow-glow">
-              <BookOpen className="h-6 w-6" />
-            </span>
-            <div className="max-w-md">
-              <h3 className="text-lg font-semibold">No courses yet</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Create your first course as an instructor, or join one with an
-                invite code to start learning.
-              </p>
+          {/* Floating illustration cluster */}
+          <div aria-hidden className="pointer-events-none absolute right-6 top-6 hidden sm:block">
+            <div className="animate-float-soft relative h-28 w-28">
+              <span className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-brand-400 to-brand-600 opacity-90 shadow-glow" />
+              <GraduationCap className="absolute inset-0 m-auto h-12 w-12 text-primary-foreground" />
+              <span className="absolute -right-2 -top-2 flex h-9 w-9 items-center justify-center rounded-2xl bg-mint/20 text-mint backdrop-blur">
+                <Sparkles className="h-4 w-4" />
+              </span>
+              <span className="absolute -bottom-3 -left-3 flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card text-primary shadow-soft">
+                <BookOpen className="h-4 w-4" />
+              </span>
             </div>
-            <div className="flex flex-wrap justify-center gap-2">
-              <Button className="group">
+          </div>
+
+          <div className="relative max-w-sm">
+            <h2 className="font-display text-2xl font-extrabold tracking-tight sm:text-3xl">
+              Your learning starts here
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              Create a course to teach what you know, or jump into one with an
+              invite code from your instructor. It only takes a minute.
+            </p>
+
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Button className="group h-12 rounded-full px-6 text-base shadow-glow">
                 <Plus className="h-4 w-4 transition-transform group-hover:rotate-90" />
                 Create a course
               </Button>
-              <Button variant="outline">
-                <UserPlus className="h-4 w-4" />
-                Join a course
+              <Button
+                variant="outline"
+                className="h-12 rounded-full border-2 bg-card/60 px-6 text-base"
+              >
+                <Ticket className="h-4 w-4" />
+                Join with a code
               </Button>
             </div>
           </div>
-        </Card>
+        </section>
+
+        {/* Getting started checklist */}
+        <section className="animate-pop rounded-3xl border border-border bg-card p-6 shadow-soft [animation-delay:160ms]">
+          <h3 className="font-display text-lg font-bold">Getting started</h3>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Three small steps to settle in.
+          </p>
+
+          <ol className="mt-5 flex flex-col gap-4">
+            {STEPS.map((step, i) => (
+              <li key={step.title} className="flex items-start gap-3">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-bold text-secondary-foreground">
+                  {i + 1}
+                </span>
+                <div className="leading-tight">
+                  <p className="font-semibold">{step.title}</p>
+                  <p className="text-sm text-muted-foreground">{step.hint}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+
+          <Link
+            href="/dashboard/explore"
+            className="group mt-6 flex items-center justify-between rounded-2xl bg-secondary/60 px-4 py-3 text-sm font-semibold transition-colors hover:bg-secondary"
+          >
+            Browse the catalogue
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </section>
+      </div>
+
+      {/* Soft stats */}
+      <section className="grid gap-4 sm:grid-cols-3">
+        {STATS.map(({ label, value, icon: Icon, tint }, i) => (
+          <div
+            key={label}
+            className="animate-pop flex items-center gap-4 rounded-2xl border border-border bg-card p-5 shadow-soft transition-transform hover:-translate-y-1"
+            style={{ animationDelay: `${220 + i * 70}ms` }}
+          >
+            <span
+              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${tint}`}
+            >
+              <Icon className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="font-display text-3xl font-extrabold leading-none tabular-nums">
+                {value}
+              </p>
+              <p className="mt-1 truncate text-sm text-muted-foreground">
+                {label}
+              </p>
+            </div>
+          </div>
+        ))}
       </section>
     </div>
   );

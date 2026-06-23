@@ -2,87 +2,102 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * COZY CAMPUS — a warm, friendly study space.
+ * Ivory paper · coral primary · soft peach + mint tints · rounded everything.
+ * Type: Bricolage Grotesque (display) · Nunito (body).
+ */
+
 @layer base {
   :root {
-    /* Surfaces — cool, paper-white with a faint blue cast */
-    --background: 210 60% 98%;
-    --foreground: 222 47% 11%;
+    --background: 38 52% 97%;
+    --foreground: 24 25% 18%;
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 24 25% 18%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 24 25% 18%;
 
-    /* Brand — confident learning blue */
-    --primary: 221 83% 53%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 214 32% 93%;
-    --secondary-foreground: 222 47% 18%;
-    --muted: 214 32% 94%;
-    --muted-foreground: 215 19% 42%;
-    --accent: 213 97% 93%;
-    --accent-foreground: 221 83% 32%;
+    --primary: 14 86% 60%;
+    --primary-foreground: 40 60% 99%;
+    --secondary: 30 50% 93%;
+    --secondary-foreground: 24 30% 24%;
+    --muted: 35 35% 93%;
+    --muted-foreground: 26 12% 46%;
+    --accent: 168 52% 90%;
+    --accent-foreground: 176 42% 24%;
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 4 78% 56%;
+    --destructive-foreground: 40 60% 99%;
 
-    --border: 214 32% 88%;
-    --input: 214 32% 86%;
-    --ring: 221 83% 53%;
+    --border: 30 28% 88%;
+    --input: 30 28% 86%;
+    --ring: 14 86% 60%;
 
-    /* Brand scale used by gradients / glows */
-    --brand-50: 214 100% 97%;
-    --brand-300: 213 94% 78%;
-    --brand-500: 217 91% 60%;
-    --brand-600: 221 83% 53%;
-    --brand-700: 224 76% 48%;
-    --brand-900: 226 57% 21%;
+    /* Warm coral → peach ramp for gradients / glows */
+    --brand-50: 22 100% 96%;
+    --brand-300: 18 96% 80%;
+    --brand-400: 16 92% 72%;
+    --brand-500: 14 88% 64%;
+    --brand-600: 12 82% 57%;
+    --brand-700: 10 74% 48%;
+    --brand-900: 14 38% 18%;
+    --glow: 14 88% 64%;
 
-    --chart-1: 221 83% 53%;
-    --chart-2: 199 89% 48%;
-    --chart-3: 250 70% 60%;
-    --chart-4: 173 58% 39%;
-    --chart-5: 43 74% 66%;
-    --radius: 0.75rem;
+    /* Friendly support tints */
+    --mint: 168 55% 45%;
+    --sky: 200 78% 56%;
+    --sun: 38 95% 58%;
+
+    --chart-1: 14 86% 60%;
+    --chart-2: 168 55% 45%;
+    --chart-3: 38 95% 58%;
+    --chart-4: 200 78% 56%;
+    --chart-5: 280 50% 62%;
+    --radius: 1rem;
   }
 
   .dark {
-    /* Surfaces — deep midnight navy */
-    --background: 222 47% 6%;
-    --foreground: 210 40% 96%;
-    --card: 222 40% 9%;
-    --card-foreground: 210 40% 96%;
-    --popover: 222 44% 8%;
-    --popover-foreground: 210 40% 96%;
+    --background: 24 16% 11%;
+    --foreground: 36 30% 92%;
+    --card: 24 15% 14%;
+    --card-foreground: 36 30% 92%;
+    --popover: 24 15% 13%;
+    --popover-foreground: 36 30% 92%;
 
-    /* Brand — luminous blue that pops on navy */
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 8%;
-    --secondary: 217 33% 15%;
-    --secondary-foreground: 210 40% 96%;
-    --muted: 217 33% 13%;
-    --muted-foreground: 215 20% 62%;
-    --accent: 217 40% 18%;
-    --accent-foreground: 213 94% 85%;
+    --primary: 14 88% 64%;
+    --primary-foreground: 24 40% 10%;
+    --secondary: 24 13% 19%;
+    --secondary-foreground: 36 26% 88%;
+    --muted: 24 12% 17%;
+    --muted-foreground: 30 12% 64%;
+    --accent: 168 26% 22%;
+    --accent-foreground: 168 55% 78%;
 
-    --destructive: 0 63% 46%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 4 72% 56%;
+    --destructive-foreground: 36 30% 95%;
 
-    --border: 217 33% 17%;
-    --input: 217 33% 19%;
-    --ring: 217 91% 60%;
+    --border: 26 13% 22%;
+    --input: 26 12% 24%;
+    --ring: 14 88% 64%;
 
-    --brand-50: 214 100% 97%;
-    --brand-300: 213 94% 78%;
-    --brand-500: 217 91% 60%;
-    --brand-600: 221 83% 53%;
-    --brand-700: 224 76% 48%;
-    --brand-900: 226 57% 21%;
+    --brand-50: 22 100% 96%;
+    --brand-300: 18 96% 80%;
+    --brand-400: 16 92% 72%;
+    --brand-500: 14 88% 64%;
+    --brand-600: 12 82% 57%;
+    --brand-700: 10 74% 50%;
+    --brand-900: 14 38% 14%;
+    --glow: 14 88% 64%;
 
-    --chart-1: 217 91% 60%;
-    --chart-2: 199 89% 55%;
-    --chart-3: 252 83% 74%;
-    --chart-4: 173 58% 45%;
-    --chart-5: 43 74% 66%;
+    --mint: 168 50% 52%;
+    --sky: 200 70% 60%;
+    --sun: 38 92% 60%;
+
+    --chart-1: 14 88% 64%;
+    --chart-2: 168 50% 52%;
+    --chart-3: 38 92% 60%;
+    --chart-4: 200 70% 60%;
+    --chart-5: 280 55% 70%;
   }
 }
 
@@ -96,28 +111,36 @@
 }
 
 @layer utilities {
-  /* Blue gradient text for headlines */
+  /* Sunset coral → peach headline gradient */
   .text-gradient-brand {
     background-image: linear-gradient(
       100deg,
       hsl(var(--brand-700)),
-      hsl(var(--brand-500)) 55%,
-      hsl(199 89% 55%)
+      hsl(var(--brand-500)) 50%,
+      hsl(var(--sun))
     );
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
 
-  /* Faint engineering-grid backdrop keyed to the border token */
+  /* Soft, friendly dotted texture */
+  .bg-dots {
+    background-image: radial-gradient(
+      hsl(var(--primary) / 0.16) 1.4px,
+      transparent 1.4px
+    );
+    background-size: 20px 20px;
+  }
+
+  /* Gentle engineering grid (kept soft for marketing pages) */
   .bg-grid {
     background-image:
-      linear-gradient(to right, hsl(var(--border) / 0.55) 1px, transparent 1px),
-      linear-gradient(to bottom, hsl(var(--border) / 0.55) 1px, transparent 1px);
+      linear-gradient(to right, hsl(var(--border) / 0.5) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.5) 1px, transparent 1px);
     background-size: 56px 56px;
   }
 
-  /* Radial spotlight that fades the grid toward the edges */
   .mask-radial-fade {
     -webkit-mask-image: radial-gradient(
       ellipse 80% 60% at 50% 0%,
@@ -131,16 +154,36 @@
     );
   }
 
+  /* Soft pillowy shadow — replaces the harsh glow */
+  .shadow-soft {
+    box-shadow:
+      0 1px 2px hsl(24 30% 30% / 0.06),
+      0 10px 30px -12px hsl(20 50% 40% / 0.18);
+  }
+
+  /* Warm halo for primary CTAs */
   .shadow-glow {
     box-shadow:
-      0 0 0 1px hsl(var(--primary) / 0.12),
-      0 18px 50px -12px hsl(var(--primary) / 0.45);
+      0 6px 18px -6px hsl(var(--glow) / 0.5),
+      0 2px 6px -2px hsl(var(--glow) / 0.35);
   }
 
   .glass {
-    background-color: hsl(var(--card) / 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background-color: hsl(var(--background) / 0.78);
+    backdrop-filter: blur(14px) saturate(150%);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+  }
+}
+
+/* Gentle, bouncy entrance */
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -150,7 +193,7 @@
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-10px);
+    transform: translateY(-9px);
   }
 }
 
@@ -160,13 +203,17 @@
     opacity: 0.7;
   }
   50% {
-    transform: translate3d(3%, -4%, 0) scale(1.08);
+    transform: translate3d(3%, -4%, 0) scale(1.06);
     opacity: 1;
   }
   100% {
     transform: translate3d(0, 0, 0) scale(1);
     opacity: 0.7;
   }
+}
+
+.animate-pop {
+  animation: pop-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .animate-float-soft {

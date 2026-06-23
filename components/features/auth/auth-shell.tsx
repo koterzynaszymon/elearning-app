@@ -22,7 +22,7 @@ export function AuthShell({
           aria-hidden
           className="pointer-events-none absolute inset-0 opacity-90"
         >
-          <div className="animate-aurora absolute -left-24 top-1/3 h-[34rem] w-[34rem] rounded-full bg-gradient-to-tr from-primary/50 via-sky-500/30 to-indigo-500/30 blur-3xl" />
+          <div className="animate-aurora absolute -left-24 top-1/3 h-[34rem] w-[34rem] rounded-full bg-gradient-to-tr from-primary/50 via-brand-400/30 to-amber-300/25 blur-3xl" />
         </div>
         <div
           aria-hidden
@@ -34,7 +34,7 @@ export function AuthShell({
         </div>
 
         <div className="relative z-10 max-w-md">
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs font-medium text-sky-100 backdrop-blur">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs font-bold text-amber-50 backdrop-blur">
             <Sparkles className="h-3.5 w-3.5" />
             Learning, illuminated
           </span>
@@ -43,7 +43,10 @@ export function AuthShell({
           </h2>
           <ul className="mt-8 space-y-3">
             {PANEL_POINTS.map((point) => (
-              <li key={point} className="flex items-center gap-3 text-sky-100/90">
+              <li
+                key={point}
+                className="flex items-center gap-3 text-amber-50/85"
+              >
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10">
                   <GraduationCap className="h-3.5 w-3.5" />
                 </span>
@@ -54,12 +57,12 @@ export function AuthShell({
         </div>
 
         <figure className="relative z-10 max-w-md">
-          <Quote className="h-6 w-6 text-sky-300/70" />
-          <blockquote className="mt-2 text-pretty text-sm leading-relaxed text-sky-100/80">
+          <Quote className="h-6 w-6 text-amber-200/70" />
+          <blockquote className="mt-2 text-pretty font-display text-base leading-relaxed text-amber-50/90">
             &ldquo;The platform that finally made me finish a course instead of
             bookmarking it for later.&rdquo;
           </blockquote>
-          <figcaption className="mt-2 text-xs text-sky-200/60">
+          <figcaption className="mt-2 text-xs font-semibold text-amber-100/60">
             — A focused learner
           </figcaption>
         </figure>

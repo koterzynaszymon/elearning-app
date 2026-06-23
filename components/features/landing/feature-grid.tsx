@@ -1,10 +1,4 @@
-import {
-  Brain,
-  Library,
-  LineChart,
-  ShieldCheck,
-  Sparkles,
-} from "lucide-react";
+import { Brain, Library, LineChart, ShieldCheck, Sparkles } from "lucide-react";
 
 export function FeatureGrid(): React.JSX.Element {
   return (
@@ -28,7 +22,7 @@ export function FeatureGrid(): React.JSX.Element {
         <article className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 sm:col-span-2 lg:row-span-2">
           <div className="bg-grid mask-radial-fade pointer-events-none absolute inset-0 opacity-40" />
           <div className="relative">
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-sky-400 text-primary-foreground shadow-glow">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 text-primary-foreground shadow-glow">
               <Brain className="h-5 w-5" />
             </span>
             <h3 className="mt-5 text-xl font-semibold">AI study companion</h3>
@@ -39,10 +33,12 @@ export function FeatureGrid(): React.JSX.Element {
             </p>
 
             <div className="mt-6 space-y-2.5">
-              <ChatBubble side="user">Explain Big-O like I&apos;m five.</ChatBubble>
+              <ChatBubble side="user">
+                Explain Big-O like I&apos;m five.
+              </ChatBubble>
               <ChatBubble side="ai">
-                It&apos;s how fast the work grows as the input grows. Doubling the
-                list might double the steps — or square them.
+                It&apos;s how fast the work grows as the input grows. Doubling
+                the list might double the steps — or square them.
               </ChatBubble>
             </div>
           </div>
@@ -88,7 +84,9 @@ function FeatureCard({
         {icon}
       </span>
       <h3 className="mt-5 text-lg font-semibold">{title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{body}</p>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+        {body}
+      </p>
     </article>
   );
 }

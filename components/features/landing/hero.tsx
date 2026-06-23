@@ -18,11 +18,8 @@ export function Hero(): React.JSX.Element {
   return (
     <section className="relative overflow-hidden">
       {/* Aurora glow */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10"
-      >
-        <div className="animate-aurora absolute -top-40 left-1/2 h-[40rem] w-[60rem] -translate-x-1/2 rounded-full bg-gradient-to-tr from-primary/30 via-sky-400/20 to-indigo-500/20 blur-3xl" />
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+        <div className="animate-aurora absolute -top-40 left-1/2 h-[40rem] w-[60rem] -translate-x-1/2 rounded-full bg-gradient-to-tr from-primary/30 via-brand-400/25 to-amber-300/20 blur-3xl" />
       </div>
       {/* Grid backdrop */}
       <div
@@ -63,8 +60,7 @@ export function Hero(): React.JSX.Element {
               className="h-12 px-6 text-base"
             >
               <Link href="/auth/login">
-                <PlayCircle />
-                I already have an account
+                <PlayCircle />I already have an account
               </Link>
             </Button>
           </div>
@@ -91,11 +87,15 @@ export function Hero(): React.JSX.Element {
                   <BookOpen className="h-5 w-5" />
                 </span>
                 <div className="leading-tight">
-                  <p className="text-sm font-semibold">Foundations of Algorithms</p>
-                  <p className="text-xs text-muted-foreground">Module 3 · Recursion</p>
+                  <p className="text-sm font-semibold">
+                    Foundations of Algorithms
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Module 3 · Recursion
+                  </p>
                 </div>
               </div>
-              <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+              <span className="rounded-full bg-mint/15 px-2.5 py-1 text-xs font-bold text-mint">
                 In progress
               </span>
             </div>
@@ -103,7 +103,11 @@ export function Hero(): React.JSX.Element {
             <div className="mt-5 space-y-3">
               <ProgressRow label="Lesson 1 · The call stack" value={100} />
               <ProgressRow label="Lesson 2 · Base cases" value={100} />
-              <ProgressRow label="Lesson 3 · Recursive thinking" value={62} active />
+              <ProgressRow
+                label="Lesson 3 · Recursive thinking"
+                value={62}
+                active
+              />
               <ProgressRow label="Lesson 4 · Memoization" value={0} />
             </div>
 
@@ -164,7 +168,7 @@ function ProgressRow({
       </div>
       <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-primary to-sky-400 transition-all"
+          className="h-full rounded-full bg-gradient-to-r from-brand-400 to-brand-600 transition-all"
           style={{ width: `${value}%` }}
         />
       </div>

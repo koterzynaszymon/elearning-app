@@ -35,7 +35,11 @@ export function HowItWorks(): React.JSX.Element {
             From sign-up to finished, in three steps.
           </h2>
         </div>
-        <Button asChild size="lg" className="group h-12 shrink-0 px-6 text-base">
+        <Button
+          asChild
+          size="lg"
+          className="group h-12 shrink-0 px-6 text-base"
+        >
           <Link href="/auth/sign-up">
             Create your free account
             <ArrowRight className="transition-transform group-hover:translate-x-1" />
@@ -64,7 +68,7 @@ export function HowItWorks(): React.JSX.Element {
             {/* Node */}
             <div className="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-border bg-card shadow-glow">
               <Icon className="h-6 w-6 text-primary" />
-              <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-primary to-sky-400 text-[11px] font-bold text-primary-foreground">
+              <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-[11px] font-bold text-primary-foreground">
                 {step.replace("0", "")}
               </span>
             </div>

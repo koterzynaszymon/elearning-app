@@ -121,10 +121,10 @@ function SidebarBody({
 
   return (
     <div className={cn("flex flex-1 flex-col", className)}>
-      <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+      <p className="px-3 pb-2 text-xs font-bold text-muted-foreground">
         Menu
       </p>
-      <nav className="flex flex-col gap-1">
+      <nav className="flex flex-col gap-1.5">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const active = isActive(href);
           return (
@@ -133,16 +133,18 @@ function SidebarBody({
               href={href}
               onClick={onNavigate}
               className={cn(
-                "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                "group flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm font-bold transition-all",
                 active
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  ? "bg-primary text-primary-foreground shadow-glow"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground",
               )}
             >
-              {active && (
-                <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-primary" />
-              )}
-              <Icon className="h-[18px] w-[18px]" />
+              <Icon
+                className={cn(
+                  "h-[18px] w-[18px] transition-transform",
+                  active ? "" : "group-hover:scale-110",
+                )}
+              />
               {label}
             </Link>
           );
@@ -150,13 +152,13 @@ function SidebarBody({
       </nav>
 
       <div className="mt-auto pt-6">
-        <div className="rounded-xl border border-border bg-background/60 p-3">
+        <div className="rounded-2xl border border-border bg-secondary/40 p-3">
           <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-sky-400 text-sm font-semibold text-primary-foreground">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-600 font-display text-base font-extrabold text-primary-foreground">
               {userEmail.charAt(0).toUpperCase()}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">
+              <p className="truncate text-sm font-bold">
                 {userEmail.split("@")[0]}
               </p>
               <p className="truncate text-xs text-muted-foreground">
@@ -168,7 +170,7 @@ function SidebarBody({
             <Button
               variant="outline"
               size="sm"
-              className="flex-1"
+              className="flex-1 rounded-full"
               onClick={handleLogout}
             >
               <LogOut className="h-4 w-4" />
