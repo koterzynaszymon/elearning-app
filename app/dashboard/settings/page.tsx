@@ -1,21 +1,21 @@
 import { Sparkles, SlidersHorizontal } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileForm } from "@/components/features/settings/profile-form";
+import { getProfileByUserId } from "@/lib/data-access/profiles";
+import { ProfileType } from "@/app/types/profile";
 
 export default async function SettingsPage(): Promise<React.JSX.Element> {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
-  const email =
-    typeof data?.claims?.email === "string"
-      ? data.claims.email
-      : "learner@lumen";
-
-  // TODO: fetch nickname & bio from your profiles table, e.g.:
-  // const { data: profile } = await supabase
-  //   .from("profiles")
-  //   .select("nickname, bio")
-  //   .eq("id", data.claims.sub)
-  //   .single();
+  const userId = data?.claims?.sub;
+  if (!userId) {
+    throw new Error("User ID is required");
+  }
+  const profile = await getProfileByUserId(userId);
+  if (!profile) {
+    throw new Error("Profile not found");
+  }
+  const {username = null, bio = null, email = null} = profile as ProfileType;
 
   return (
     <div className="flex flex-col gap-8">
@@ -38,9 +38,9 @@ export default async function SettingsPage(): Promise<React.JSX.Element> {
         {/* Left — form */}
         <div className="min-w-0">
           <ProfileForm
-            userEmail={email}
-            initialNickname={""}
-            initialBio={""}
+            userEmail={email || ""}
+            initialUsername={username || ""}
+            initialBio={bio || ""}
           />
         </div>
 

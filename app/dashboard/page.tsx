@@ -108,9 +108,14 @@ export default async function DashboardPage(): Promise<React.JSX.Element> {
             </p>
 
             <div className="mt-7 flex flex-wrap gap-3">
-              <Button className="group h-12 rounded-full px-6 text-base shadow-glow">
-                <Plus className="h-4 w-4 transition-transform group-hover:rotate-90" />
-                Create a course
+              <Button
+                asChild
+                className="group h-12 rounded-full px-6 text-base shadow-glow"
+              >
+                <Link href="/dashboard/create-course">
+                  <Plus className="h-4 w-4 transition-transform group-hover:rotate-90" />
+                  Create a course
+                </Link>
               </Button>
               <Button
                 variant="outline"

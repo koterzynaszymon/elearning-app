@@ -1,16 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { Camera, CheckCircle2, Lock, Loader2, Sparkles, User } from "lucide-react";
+import {
+  Camera,
+  CheckCircle2,
+  Lock,
+  Loader2,
+  Sparkles,
+  User,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { updateProfileByUserId } from "@/lib/data-access/profiles";
+import { useRouter } from "next/navigation";
 
 interface ProfileFormProps {
   userEmail: string;
-  initialNickname?: string;
+  initialUsername?: string;
   initialBio?: string;
 }
 
@@ -22,26 +31,41 @@ type SaveState =
 
 export function ProfileForm({
   userEmail,
-  initialNickname = "",
+  initialUsername = "",
   initialBio = "",
 }: ProfileFormProps): React.JSX.Element {
-  const [nickname, setNickname] = useState(initialNickname);
-  const [bio, setBio] = useState(initialBio);
+  const [baseline, setBaseline] = useState({
+    username: initialUsername,
+    bio: initialBio ?? "",
+  });
+  const [username, setUsername] = useState(baseline.username);
+  const [bio, setBio] = useState(baseline.bio);
+  const isDirty = username !== baseline.username || bio !== baseline.bio;
   const [saveState, setSaveState] = useState<SaveState>({ status: "idle" });
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const avatarInitial = (username || userEmail).charAt(0).toUpperCase();
 
-  const avatarInitial = (nickname || userEmail).charAt(0).toUpperCase();
-  const isDirty =
-    nickname !== initialNickname || bio !== initialBio;
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>,
+  ): Promise<void> => {
     e.preventDefault();
-    setSaveState({ status: "saving" });
+    if (!isDirty || saveState.status === "saving") return;
+    setError(null);
 
-    // TODO: wire up your server action / API call here
-    // Example: const result = await updateProfile({ nickname, bio });
-    await new Promise((r) => setTimeout(r, 800)); // placeholder
-    setSaveState({ status: "saved" });
-    setTimeout(() => setSaveState({ status: "idle" }), 2500);
+    
+    const result = await updateProfileByUserId({ username, bio });
+    if (result.success) {
+      const nextUsername = result.data.username ?? "";
+      const nextBio = result.data.bio ?? "";
+      setUsername(nextUsername);
+      setBio(nextBio);
+      setBaseline({ username: nextUsername, bio: nextBio }); // ← this clears isDirty
+      setSaveState({ status: "saved" });
+      setTimeout(() => setSaveState({ status: "idle" }), 2500);
+    } else {
+      setError(result.error || "Failed to update profile");
+    }
   };
 
   return (
@@ -64,7 +88,7 @@ export function ProfileForm({
 
         <div className="space-y-0.5">
           <p className="font-display text-lg font-extrabold">
-            {nickname || userEmail.split("@")[0]}
+            {username || userEmail.split("@")[0]}
           </p>
           <p className="text-xs text-muted-foreground">{userEmail}</p>
         </div>
@@ -94,16 +118,16 @@ export function ProfileForm({
         <div className="flex flex-col gap-5">
           {/* Nickname */}
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="nickname" className="text-sm font-bold">
-              Nickname
+            <Label htmlFor="username" className="text-sm font-bold">
+              Username
             </Label>
             <Input
-              id="nickname"
-              name="nickname"
+              id="username"
+              name="username"
               type="text"
               placeholder="e.g. curious_learner"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               maxLength={40}
               className="rounded-xl"
             />
@@ -134,7 +158,10 @@ export function ProfileForm({
 
           {/* Email — read-only */}
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="email" className="flex items-center gap-1.5 text-sm font-bold">
+            <Label
+              htmlFor="email"
+              className="flex items-center gap-1.5 text-sm font-bold"
+            >
               Email address
               <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
                 <Lock className="h-2.5 w-2.5" />
@@ -154,7 +181,8 @@ export function ProfileForm({
               <Lock className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
             </div>
             <p className="text-xs text-muted-foreground">
-              Email is managed by your authentication provider and cannot be changed here.
+              Email is managed by your authentication provider and cannot be
+              changed here.
             </p>
           </div>
         </div>
@@ -164,7 +192,8 @@ export function ProfileForm({
       <div
         className={cn(
           "animate-pop flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-3.5 shadow-soft [animation-delay:240ms]",
-          saveState.status === "error" && "border-destructive/40 bg-destructive/5",
+          saveState.status === "error" &&
+            "border-destructive/40 bg-destructive/5",
         )}
       >
         {saveState.status === "error" ? (
@@ -196,6 +225,7 @@ export function ProfileForm({
             "Save changes"
           )}
         </Button>
+        {error && <p className="text-sm text-destructive">{error}</p>}
       </div>
     </form>
   );
