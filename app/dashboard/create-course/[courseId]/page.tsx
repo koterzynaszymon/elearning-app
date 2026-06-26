@@ -1,16 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import {
-  ArrowLeft,
-  Check,
-  Globe,
-  ListChecks,
-  Lock,
-  Rocket,
-  Sparkles,
-  Type,
-} from "lucide-react";
+import { Check, ListChecks, Rocket, Sparkles, Type } from "lucide-react";
 import { getCourseById } from "@/lib/data-access/courses";
+import { CurriculumBuilder } from "@/components/features/create-course/curriculum/curriculum-builder";
 import { cn } from "@/lib/utils";
 
 interface WizardStep {
@@ -93,59 +84,10 @@ export default async function CurriculumStepPage({
         </li>
       </ol>
 
-      {/* Draft summary + placeholder */}
-      <section className="animate-pop overflow-hidden rounded-3xl border border-border bg-card shadow-soft [animation-delay:80ms]">
-        <div className="flex flex-col gap-1 border-b border-border bg-secondary/30 p-6">
-          <div className="flex items-center gap-2">
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold",
-                course.is_public
-                  ? "bg-mint/15 text-mint"
-                  : "bg-secondary text-secondary-foreground",
-              )}
-            >
-              {course.is_public ? (
-                <Globe className="h-2.5 w-2.5" />
-              ) : (
-                <Lock className="h-2.5 w-2.5" />
-              )}
-              {course.is_public ? "Public" : "Private"}
-            </span>
-            <span className="rounded-full bg-secondary px-2.5 py-1 text-[10px] font-bold text-secondary-foreground capitalize">
-              {course.status}
-            </span>
-          </div>
-          <h2 className="mt-1 break-words font-display text-xl font-extrabold leading-tight">
-            {course.title}
-          </h2>
-          {course.description && (
-            <p className="break-words text-sm text-muted-foreground">
-              {course.description}
-            </p>
-          )}
-        </div>
-
-        <div className="flex flex-col items-center gap-3 p-10 text-center">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <ListChecks className="h-6 w-6" />
-          </span>
-          <h3 className="font-display text-lg font-bold">
-            Lesson builder coming next
-          </h3>
-          <p className="max-w-sm text-sm text-muted-foreground">
-            This is where you&apos;ll add and reorder lessons. It isn&apos;t
-            built yet — but your draft is already saved to the database.
-          </p>
-          <Link
-            href="/dashboard"
-            className="group mt-2 inline-flex items-center gap-2 rounded-full bg-secondary px-5 py-2.5 text-sm font-bold text-secondary-foreground transition-colors hover:bg-secondary/70"
-          >
-            <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-            Back to dashboard
-          </Link>
-        </div>
-      </section>
+      {/* Lesson builder */}
+      <div className="animate-pop [animation-delay:80ms]">
+        <CurriculumBuilder course={course} />
+      </div>
     </div>
   );
 }
