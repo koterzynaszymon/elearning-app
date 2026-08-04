@@ -2,7 +2,15 @@
 
 import { useCallback, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, Loader2, Plus, Save, Sparkles } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Loader2,
+  Plus,
+  Save,
+  Sparkles,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CourseType } from "@/app/types/course";
 import { LessonEditor } from "./lesson-editor";
@@ -180,6 +188,15 @@ export function CurriculumBuilder({
           <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
           Back to dashboard
         </Link>
+        <Button
+          asChild
+          className="group h-11 rounded-full px-6 shadow-glow"
+        >
+          <Link href={`/dashboard/create-course/${course.id}/publish`}>
+            Continue to publish
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </Button>
       </div>
     </div>
   );
