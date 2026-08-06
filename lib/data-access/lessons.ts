@@ -1,0 +1,92 @@
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+import { LessonInput, LessonType } from "@/app/types/lesson";
+import { Result } from "@/app/types/profile";
+
+const TITLE_MAX = 100;
+
+export async function getLessonsByCourse(
+  courseId: string,
+): Promise<LessonType[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("lessons")
+    .select("*")
+    .eq("course_id", courseId)
+    .order("order_index", { ascending: true });
+  if (error) {
+    console.error(error);
+    return [];
+  }
+  return data as LessonType[];
+}
+
+/**
+ * Replaces the full lesson set for a course in one shot.
+ *
+ * The `lessons` table has `unique (course_id, order_index)`, which makes an
+ * in-place reorder awkward (updating indexes one by one collides with the
+ * constraint). Replacing wholesale — delete all, then insert in array order —
+ * sidesteps that. Payload is validated before the delete so a bad request can
+ * never wipe an existing draft.
+ */
+export async function saveCurriculumDraft(
+  courseId: string,
+  lessons: readonly LessonInput[],
+): Promise<Result<LessonType[]>> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return { success: false, error: "User not found" };
+  }
+
+  const { data: course, error: courseError } = await supabase
+    .from("courses")
+    .select("id, author_id")
+    .eq("id", courseId)
+    .single();
+  if (courseError || !course) {
+    return { success: false, error: "Course not found" };
+  }
+  if (course.author_id !== user.id) {
+    return { success: false, error: "You cannot edit this course" };
+  }
+
+  for (const lesson of lessons) {
+    if (lesson.title.trim().length > TITLE_MAX) {
+      return {
+        success: false,
+        error: `Lesson titles must be ${TITLE_MAX} characters or fewer`,
+      };
+    }
+  }
+
+  const { error: deleteError } = await supabase
+    .from("lessons")
+    .delete()
+    .eq("course_id", courseId);
+  if (deleteError) {
+    return { success: false, error: deleteError.message };
+  }
+
+  if (lessons.length === 0) {
+    return { success: true, data: [] };
+  }
+
+  const rows = lessons.map((lesson, index) => ({
+    course_id: courseId,
+    title: lesson.title.trim() || "Untitled lesson",
+    content: lesson.content.length > 0 ? lesson.content : null,
+    order_index: index,
+  }));
+
+  const { data, error } = await supabase.from("lessons").insert(rows).select();
+  if (error) {
+    return { success: false, error: error.message };
+  }
+  return { success: true, data: data as LessonType[] };
+}

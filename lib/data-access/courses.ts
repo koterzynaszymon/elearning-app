@@ -46,6 +46,53 @@ export async function getCourseById(
   return data as CourseType;
 }
 
+export async function getDraftCoursesByAuthor(): Promise<CourseType[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return [];
+  }
+  const { data, error } = await supabase
+    .from("courses")
+    .select("*")
+    .eq("author_id", user.id)
+    .eq("status", "draft")
+    .order("updated_at", { ascending: false });
+  if (error) {
+    console.error(error);
+    return [];
+  }
+  return data as CourseType[];
+}
+
+export async function publishCourse(
+  courseId: string,
+): Promise<Result<CourseType>> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return { success: false, error: "User not found" };
+  }
+
+  const { data, error } = await supabase
+    .from("courses")
+    .update({ status: "published" })
+    .eq("id", courseId)
+    .eq("author_id", user.id)
+    .select()
+    .single();
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+  return { success: true, data: data as CourseType };
+}
+
 export async function createCourseDraft({
   title,
   description,
