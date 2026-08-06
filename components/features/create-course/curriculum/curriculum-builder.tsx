@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CourseType } from "@/app/types/course";
+import { saveCurriculumDraft } from "@/lib/data-access/lessons";
 import { LessonEditor } from "./lesson-editor";
 import { LessonSidebar } from "./lesson-sidebar";
 import type { LessonDraft } from "./types";
@@ -43,6 +44,7 @@ export function CurriculumBuilder({
   course,
   initialLessons = [],
 }: CurriculumBuilderProps): React.JSX.Element {
+  const router = useRouter();
   const [lessons, setLessons] = useState<readonly LessonDraft[]>(initialLessons);
   const [activeId, setActiveId] = useState<string | null>(
     initialLessons[0]?.id ?? null,
@@ -109,12 +111,30 @@ export function CurriculumBuilder({
   );
 
 
-  const persistDraft = useCallback(async (): Promise<void> => {
+  const persistDraft = useCallback(async (): Promise<boolean> => {
     setSaveState({ status: "saving" });
-    // TODO: await saveCurriculumDraft(course.id, lessons)
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    setSaveState({ status: "saved" });
-  }, []);
+    const result = await saveCurriculumDraft(
+      course.id,
+      lessons.map((lesson) => ({
+        title: lesson.title,
+        content: lesson.content,
+      })),
+    );
+    if (result.success) {
+      setSaveState({ status: "saved" });
+      return true;
+    }
+    setSaveState({ status: "error", message: result.error });
+    return false;
+  }, [course.id, lessons]);
+
+  const saveAndGo = useCallback(
+    async (href: string): Promise<void> => {
+      const ok = await persistDraft();
+      if (ok) router.push(href);
+    },
+    [persistDraft, router],
+  );
 
   const activeIndex = lessons.findIndex((l) => l.id === activeId);
   const activeLesson = activeIndex >= 0 ? lessons[activeIndex] : null;
@@ -139,8 +159,8 @@ export function CurriculumBuilder({
             type="button"
             variant="secondary"
             size="sm"
-            onClick={persistDraft}
-            disabled={isSaving || lessons.length === 0}
+            onClick={() => void persistDraft()}
+            disabled={isSaving}
             className="rounded-full"
           >
             {isSaving ? (
@@ -179,23 +199,28 @@ export function CurriculumBuilder({
         )}
       </div>
 
-      {/* Footer nav */}
+      {/* Footer nav — both actions save the draft first, so nothing is lost */}
       <div className="flex items-center justify-between gap-4 pt-1">
-        <Link
-          href="/dashboard"
-          className="group inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => void saveAndGo("/dashboard")}
+          disabled={isSaving}
+          className="group rounded-full px-4 text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-          Back to dashboard
-        </Link>
+          Save &amp; back to dashboard
+        </Button>
         <Button
-          asChild
+          type="button"
+          onClick={() =>
+            void saveAndGo(`/dashboard/create-course/${course.id}/publish`)
+          }
+          disabled={isSaving}
           className="group h-11 rounded-full px-6 shadow-glow"
         >
-          <Link href={`/dashboard/create-course/${course.id}/publish`}>
-            Continue to publish
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </Link>
+          Continue to publish
+          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </Button>
       </div>
     </div>

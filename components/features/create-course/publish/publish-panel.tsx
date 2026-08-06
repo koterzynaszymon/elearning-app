@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CourseType } from "@/app/types/course";
+import { publishCourse } from "@/lib/data-access/courses";
 import { cn } from "@/lib/utils";
 
 interface PublishPanelProps {
@@ -76,9 +77,13 @@ export function PublishPanel({ course }: PublishPanelProps): React.JSX.Element {
   const handlePublish = useCallback(async (): Promise<void> => {
     if (!canPublish) return;
     setPublishState({ status: "publishing" });
-    await new Promise((resolve) => setTimeout(resolve, 900));
-    setPublishState({ status: "published" });
-  }, [canPublish]);
+    const result = await publishCourse(course.id);
+    setPublishState(
+      result.success
+        ? { status: "published" }
+        : { status: "error", message: result.error },
+    );
+  }, [canPublish, course.id]);
 
   if (publishState.status === "published") {
     return <PublishedCelebration course={course} />;

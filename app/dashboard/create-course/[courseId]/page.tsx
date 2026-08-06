@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
 import { Check, ListChecks, Rocket, Sparkles, Type } from "lucide-react";
 import { getCourseById } from "@/lib/data-access/courses";
+import { getLessonsByCourse } from "@/lib/data-access/lessons";
 import { CurriculumBuilder } from "@/components/features/create-course/curriculum/curriculum-builder";
+import type { LessonDraft } from "@/components/features/create-course/curriculum/types";
 import { cn } from "@/lib/utils";
 
 interface WizardStep {
@@ -29,6 +31,13 @@ export default async function CurriculumStepPage({
   if (!course) {
     redirect("/dashboard/create-course");
   }
+
+  const lessons = await getLessonsByCourse(courseId);
+  const initialLessons: LessonDraft[] = lessons.map((lesson) => ({
+    id: lesson.id,
+    title: lesson.title,
+    content: lesson.content ?? "",
+  }));
 
   return (
     <div className="flex flex-col gap-8">
@@ -86,7 +95,7 @@ export default async function CurriculumStepPage({
 
       {/* Lesson builder */}
       <div className="animate-pop [animation-delay:80ms]">
-        <CurriculumBuilder course={course} />
+        <CurriculumBuilder course={course} initialLessons={initialLessons} />
       </div>
     </div>
   );
