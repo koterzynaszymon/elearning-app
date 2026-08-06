@@ -3,14 +3,20 @@ import {
   BookOpen,
   CheckCircle2,
   Clock,
+  Globe,
   GraduationCap,
+  Lock,
+  PenLine,
   Plus,
   Sparkles,
   Ticket,
   ArrowRight,
+  ArrowUpRight,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { getDraftCoursesByAuthor } from "@/lib/data-access/courses";
 import { Button } from "@/components/ui/button";
+import type { CourseType } from "@/app/types/course";
 
 interface Stat {
   readonly label: string;
@@ -51,12 +57,20 @@ function friendlyName(email: string): string {
   return handle.charAt(0).toUpperCase() + handle.slice(1);
 }
 
+function formatEdited(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
+}
+
 export default async function DashboardPage(): Promise<React.JSX.Element> {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   const email =
     typeof data?.claims?.email === "string" ? data.claims.email : "there@lumen";
   const name = friendlyName(email);
+  const drafts = await getDraftCoursesByAuthor();
 
   return (
     <div className="flex flex-col gap-8">
@@ -74,6 +88,36 @@ export default async function DashboardPage(): Promise<React.JSX.Element> {
           great to learn.
         </p>
       </header>
+
+      {/* Continue with your drafts */}
+      {drafts.length > 0 && (
+        <section className="animate-pop [animation-delay:60ms]">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <PenLine className="h-4 w-4" />
+              </span>
+              <div>
+                <h2 className="font-display text-lg font-extrabold leading-tight">
+                  Continue with your draft
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Pick up right where you left off.
+                </p>
+              </div>
+            </div>
+            <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-bold text-secondary-foreground">
+              {drafts.length} draft{drafts.length === 1 ? "" : "s"}
+            </span>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {drafts.map((draft) => (
+              <DraftCard key={draft.id} draft={draft} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Welcome hero + getting started */}
       <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
@@ -184,5 +228,46 @@ export default async function DashboardPage(): Promise<React.JSX.Element> {
         ))}
       </section>
     </div>
+  );
+}
+
+function DraftCard({ draft }: { draft: CourseType }): React.JSX.Element {
+  return (
+    <Link
+      href={`/dashboard/create-course/${draft.id}`}
+      className="group flex flex-col rounded-3xl border border-border bg-card p-5 shadow-soft transition-all hover:-translate-y-1 hover:border-primary/40"
+    >
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[10px] font-bold text-secondary-foreground">
+          {draft.is_public ? (
+            <Globe className="h-2.5 w-2.5" />
+          ) : (
+            <Lock className="h-2.5 w-2.5" />
+          )}
+          {draft.is_public ? "Public" : "Private"}
+        </span>
+        <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-primary">
+          Draft
+        </span>
+      </div>
+
+      <h3 className="line-clamp-2 break-words font-display text-lg font-extrabold leading-tight">
+        {draft.title}
+      </h3>
+      <p className="mt-1.5 line-clamp-2 break-words text-sm leading-relaxed text-muted-foreground">
+        {draft.description?.trim() || "No description yet."}
+      </p>
+
+      <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
+        <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Clock className="h-3.5 w-3.5" />
+          Edited {formatEdited(draft.updated_at)}
+        </span>
+        <span className="inline-flex items-center gap-1 text-xs font-bold text-primary">
+          Continue
+          <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+        </span>
+      </div>
+    </Link>
   );
 }
