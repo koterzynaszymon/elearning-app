@@ -4,7 +4,32 @@ import { randomBytes } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import { hashPassword } from "@/lib/security/password";
 import { CourseType, CreateCourseInput } from "@/app/types/course";
+import { ExploreCourse } from "@/app/types/explore";
 import { Result } from "@/app/types/profile";
+
+type PublishedCatalogueRow = {
+  id: string;
+  title: string;
+  description: string | null;
+  is_public: boolean;
+  updated_at: string;
+  author_name: string;
+  lesson_count: number;
+  student_count: number;
+};
+
+function mapPublishedCourse(row: PublishedCatalogueRow): ExploreCourse {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description?.trim() ?? "",
+    authorName: row.author_name,
+    isPublic: row.is_public,
+    lessonCount: row.lesson_count,
+    studentCount: row.student_count,
+    publishedAt: row.updated_at,
+  };
+}
 
 const TITLE_MIN = 1;
 const TITLE_MAX = 80;
@@ -44,6 +69,20 @@ export async function getCourseById(
     return null;
   }
   return data as CourseType;
+}
+
+export async function getPublishedCourses(): Promise<ExploreCourse[]> {
+  const supabase = await createClient();
+  // SECURITY DEFINER RPC — see migration published_catalogue.sql.
+  // Needed so lesson/student counts are accurate under RLS, without it, RLS blocks for example visibility of student count.
+  const { data, error } = await supabase.rpc("get_published_catalogue");
+
+  if (error) {
+    console.error(error);
+    return [];
+  }
+
+  return (data as PublishedCatalogueRow[]).map(mapPublishedCourse);
 }
 
 export async function getDraftCoursesByAuthor(): Promise<CourseType[]> {
