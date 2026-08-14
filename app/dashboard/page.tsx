@@ -15,36 +15,16 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getDraftCoursesByAuthor } from "@/lib/data-access/courses";
+import { getEnrolledCourseIds } from "@/lib/data-access/enrollments";
 import { Button } from "@/components/ui/button";
 import type { CourseType } from "@/app/types/course";
 
 interface Stat {
   readonly label: string;
-  readonly value: string;
+  readonly value: number;
   readonly icon: React.ComponentType<{ className?: string }>;
   readonly tint: string;
 }
-
-const STATS: readonly Stat[] = [
-  {
-    label: "Courses enrolled",
-    value: "0",
-    icon: BookOpen,
-    tint: "bg-primary/10 text-primary",
-  },
-  {
-    label: "In progress",
-    value: "0",
-    icon: Clock,
-    tint: "bg-mint/15 text-mint",
-  },
-  {
-    label: "Completed",
-    value: "0",
-    icon: CheckCircle2,
-    tint: "bg-amber-400/15 text-amber-600 dark:text-amber-400",
-  },
-];
 
 const STEPS: readonly { readonly title: string; readonly hint: string }[] = [
   { title: "Join or create a course", hint: "This is your very first step." },
@@ -70,7 +50,32 @@ export default async function DashboardPage(): Promise<React.JSX.Element> {
   const email =
     typeof data?.claims?.email === "string" ? data.claims.email : "there@lumen";
   const name = friendlyName(email);
-  const drafts = await getDraftCoursesByAuthor();
+  const [drafts, enrolledIds] = await Promise.all([
+    getDraftCoursesByAuthor(),
+    getEnrolledCourseIds(),
+  ]);
+  const enrolledCount = enrolledIds.length;
+
+  const stats: readonly Stat[] = [
+    {
+      label: "Courses enrolled",
+      value: enrolledCount,
+      icon: BookOpen,
+      tint: "bg-primary/10 text-primary",
+    },
+    {
+      label: "In progress",
+      value: 0,
+      icon: Clock,
+      tint: "bg-mint/15 text-mint",
+    },
+    {
+      label: "Completed",
+      value: 0,
+      icon: CheckCircle2,
+      tint: "bg-amber-400/15 text-amber-600 dark:text-amber-400",
+    },
+  ];
 
   return (
     <div className="flex flex-col gap-8">
@@ -84,8 +89,9 @@ export default async function DashboardPage(): Promise<React.JSX.Element> {
           Hi again, <span className="text-gradient-brand">{name}</span>!
         </h1>
         <p className="mt-2 max-w-md text-base text-muted-foreground">
-          You don&apos;t have any courses yet — let&apos;s find you something
-          great to learn.
+          {enrolledCount > 0
+            ? `You're enrolled in ${enrolledCount} course${enrolledCount === 1 ? "" : "s"} — keep the momentum going.`
+            : "You don't have any courses yet — let's find you something great to learn."}
         </p>
       </header>
 
@@ -205,7 +211,7 @@ export default async function DashboardPage(): Promise<React.JSX.Element> {
 
       {/* Soft stats */}
       <section className="grid gap-4 sm:grid-cols-3">
-        {STATS.map(({ label, value, icon: Icon, tint }, i) => (
+        {stats.map(({ label, value, icon: Icon, tint }, i) => (
           <div
             key={label}
             className="animate-pop flex items-center gap-4 rounded-2xl border border-border bg-card p-5 shadow-soft transition-transform hover:-translate-y-1"
