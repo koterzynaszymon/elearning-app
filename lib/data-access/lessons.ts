@@ -5,6 +5,7 @@ import { LessonInput, LessonType } from "@/app/types/lesson";
 import { Result } from "@/app/types/profile";
 
 const TITLE_MAX = 100;
+const FIRST_ORDER_INDEX = 1;
 
 export async function getLessonsByCourse(
   courseId: string,
@@ -25,11 +26,11 @@ export async function getLessonsByCourse(
 /**
  * Replaces the full lesson set for a course in one shot.
  *
- * The `lessons` table has `unique (course_id, order_index)`, which makes an
- * in-place reorder awkward (updating indexes one by one collides with the
- * constraint). Replacing wholesale — delete all, then insert in array order —
- * sidesteps that. Payload is validated before the delete so a bad request can
- * never wipe an existing draft.
+ * Destroying and re-creating rows discards lesson ids, which would take any
+ * `lesson_completions` rows with them. That is safe only because RLS permits
+ * lesson inserts and deletes on drafts alone, and nobody can enroll in a draft —
+ * so a course reaching this function has no completions to lose. Payload is
+ * validated before the delete so a bad request can never wipe an existing draft.
  */
 export async function saveCurriculumDraft(
   courseId: string,
@@ -81,7 +82,7 @@ export async function saveCurriculumDraft(
     course_id: courseId,
     title: lesson.title.trim() || "Untitled lesson",
     content: lesson.content.length > 0 ? lesson.content : null,
-    order_index: index,
+    order_index: index + FIRST_ORDER_INDEX,
   }));
 
   const { data, error } = await supabase.from("lessons").insert(rows).select();
