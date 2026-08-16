@@ -262,6 +262,122 @@
   pointer-events: none;
 }
 
+/* Reading view for published lesson content — looser and larger than the editor */
+.lesson-prose {
+  max-width: 68ch;
+  font-size: 1.0625rem;
+  line-height: 1.8;
+  color: hsl(var(--foreground));
+}
+
+.lesson-prose > * + * {
+  margin-top: 1.15em;
+}
+
+.lesson-prose h1,
+.lesson-prose h2,
+.lesson-prose h3,
+.lesson-prose h4 {
+  font-family: var(--font-display, inherit);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.lesson-prose h1 {
+  font-size: 1.9rem;
+}
+
+.lesson-prose h2 {
+  font-size: 1.45rem;
+}
+
+.lesson-prose h3 {
+  font-size: 1.2rem;
+}
+
+.lesson-prose h4 {
+  font-size: 1.05rem;
+}
+
+.lesson-prose :is(h1, h2, h3, h4) + * {
+  margin-top: 0.6em;
+}
+
+.lesson-prose > :is(h2, h3) {
+  margin-top: 1.9em;
+}
+
+.lesson-prose p {
+  margin: 0;
+}
+
+.lesson-prose ul,
+.lesson-prose ol {
+  padding-left: 1.6rem;
+}
+
+.lesson-prose ul {
+  list-style: disc;
+}
+
+.lesson-prose ol {
+  list-style: decimal;
+}
+
+.lesson-prose li + li {
+  margin-top: 0.4em;
+}
+
+.lesson-prose li::marker {
+  color: hsl(var(--primary));
+  font-weight: 700;
+}
+
+.lesson-prose blockquote {
+  border-left: 3px solid hsl(var(--primary) / 0.5);
+  padding: 0.15rem 0 0.15rem 1.15rem;
+  font-style: italic;
+  color: hsl(var(--muted-foreground));
+}
+
+.lesson-prose pre {
+  border-radius: 0.85rem;
+  background: hsl(var(--secondary));
+  padding: 1rem 1.15rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  overflow-x: auto;
+}
+
+.lesson-prose code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+.lesson-prose :not(pre) > code {
+  border-radius: 0.4rem;
+  background: hsl(var(--secondary));
+  padding: 0.12rem 0.38rem;
+  font-size: 0.88em;
+}
+
+.lesson-prose strong {
+  font-weight: 700;
+}
+
+.lesson-prose a {
+  color: hsl(var(--primary));
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.lesson-prose hr {
+  border: 0;
+  border-top: 1px solid hsl(var(--border));
+  margin-block: 2em;
+}
+
 /* Gentle, bouncy entrance */
 @keyframes pop-in {
   0% {
