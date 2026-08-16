@@ -10,6 +10,6 @@ export type EnrolledCourse = {
   readonly completedLessons: number;
   /** ISO date string — when the learner joined the course. */
   readonly enrolledAt: string;
-  /** ISO date string of the last lesson activity, or null if never opened. */
+  /** ISO date string of the last completion, or null if there is none yet. */
   readonly lastActivityAt: string | null;
 };
