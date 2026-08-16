@@ -15,9 +15,11 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getDraftCoursesByAuthor } from "@/lib/data-access/courses";
-import { getEnrolledCourseIds } from "@/lib/data-access/enrollments";
+import { getEnrolledCourses } from "@/lib/data-access/my-courses";
+import { courseProgressStatus } from "@/lib/course-progress";
 import { Button } from "@/components/ui/button";
 import type { CourseType } from "@/app/types/course";
+import type { CourseProgressStatus, EnrolledCourse } from "@/app/types/my-courses";
 
 interface Stat {
   readonly label: string;
@@ -44,17 +46,25 @@ function formatEdited(iso: string): string {
   });
 }
 
+function countByStatus(
+  courses: readonly EnrolledCourse[],
+  status: CourseProgressStatus,
+): number {
+  return courses.filter((course) => courseProgressStatus(course) === status)
+    .length;
+}
+
 export default async function DashboardPage(): Promise<React.JSX.Element> {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   const email =
     typeof data?.claims?.email === "string" ? data.claims.email : "there@lumen";
   const name = friendlyName(email);
-  const [drafts, enrolledIds] = await Promise.all([
+  const [drafts, enrolledCourses] = await Promise.all([
     getDraftCoursesByAuthor(),
-    getEnrolledCourseIds(),
+    getEnrolledCourses(),
   ]);
-  const enrolledCount = enrolledIds.length;
+  const enrolledCount = enrolledCourses.length;
 
   const stats: readonly Stat[] = [
     {
@@ -65,13 +75,13 @@ export default async function DashboardPage(): Promise<React.JSX.Element> {
     },
     {
       label: "In progress",
-      value: 0,
+      value: countByStatus(enrolledCourses, "in-progress"),
       icon: Clock,
       tint: "bg-mint/15 text-mint",
     },
     {
       label: "Completed",
-      value: 0,
+      value: countByStatus(enrolledCourses, "completed"),
       icon: CheckCircle2,
       tint: "bg-amber-400/15 text-amber-600 dark:text-amber-400",
     },

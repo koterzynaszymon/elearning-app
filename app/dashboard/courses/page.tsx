@@ -1,10 +1,10 @@
+import { Suspense } from "react";
 import { GraduationCap } from "lucide-react";
+import { getEnrolledCourses } from "@/lib/data-access/my-courses";
 import { MyCoursesView } from "@/components/features/my-courses/my-courses-view";
-import type { EnrolledCourse } from "@/app/types/my-courses";
+import { MyCoursesSkeleton } from "@/components/features/my-courses/my-courses-skeleton";
 
-export default async function MyCoursesPage(): Promise<React.JSX.Element> {
-  const courses: readonly EnrolledCourse[] = [];
-
+export default function MyCoursesPage(): React.JSX.Element {
   return (
     <div className="flex flex-col gap-8">
       {/* Page header */}
@@ -23,8 +23,15 @@ export default async function MyCoursesPage(): Promise<React.JSX.Element> {
       </header>
 
       <div className="animate-pop [animation-delay:60ms]">
-        <MyCoursesView courses={courses} />
+        <Suspense fallback={<MyCoursesSkeleton />}>
+          <EnrolledCourses />
+        </Suspense>
       </div>
     </div>
   );
+}
+
+async function EnrolledCourses(): Promise<React.JSX.Element> {
+  const courses = await getEnrolledCourses();
+  return <MyCoursesView courses={courses} />;
 }

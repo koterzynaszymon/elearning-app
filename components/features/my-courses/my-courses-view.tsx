@@ -11,20 +11,15 @@ import {
   Trophy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { courseProgressStatus } from "@/lib/course-progress";
 import { EnrolledCourseCard } from "./enrolled-course-card";
-import type { CourseProgressStatus, EnrolledCourse, EnrolledFilter } from "./types";
+import type { EnrolledCourse, EnrolledFilter } from "./types";
 
 interface MyCoursesViewProps {
   readonly courses: readonly EnrolledCourse[];
 }
 
 const FULL_PROGRESS = 100;
-
-function statusOf(course: EnrolledCourse): CourseProgressStatus {
-  if (course.completedLessons <= 0) return "not-started";
-  if (course.completedLessons >= course.lessonCount) return "completed";
-  return "in-progress";
-}
 
 function overallPercent(courses: readonly EnrolledCourse[]): number {
   const totals = courses.reduce(
@@ -51,7 +46,7 @@ export function MyCoursesView({ courses }: MyCoursesViewProps): React.JSX.Elemen
   const counts = useMemo(() => {
     return courses.reduce(
       (acc, course) => {
-        const status = statusOf(course);
+        const status = courseProgressStatus(course);
         acc.all += 1;
         acc[status] += 1;
         return acc;
@@ -65,7 +60,7 @@ export function MyCoursesView({ courses }: MyCoursesViewProps): React.JSX.Elemen
 
   const results = useMemo<EnrolledCourse[]>(() => {
     if (filter === "all") return [...courses];
-    return courses.filter((course) => statusOf(course) === filter);
+    return courses.filter((course) => courseProgressStatus(course) === filter);
   }, [courses, filter]);
 
   if (courses.length === 0) {

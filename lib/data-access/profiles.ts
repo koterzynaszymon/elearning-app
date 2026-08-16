@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { ProfileType, UpdateProfileInput } from "@/app/types/profile";
+import { ProfileType, Result, UpdateProfileInput } from "@/app/types/profile";
 
 export async function getProfileByUserId(userId: string): Promise <ProfileType | null> {
     const supabase = await createClient();

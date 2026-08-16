@@ -12,6 +12,10 @@ import {
   Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  courseProgressPercent,
+  courseProgressStatus,
+} from "@/lib/course-progress";
 import type { CourseProgressStatus, EnrolledCourse } from "./types";
 
 const COVERS: readonly string[] = [
@@ -27,17 +31,6 @@ const FULL_PROGRESS = 100;
 interface EnrolledCourseCardProps {
   readonly course: EnrolledCourse;
   readonly accentIndex: number;
-}
-
-function progressStatus(course: EnrolledCourse): CourseProgressStatus {
-  if (course.completedLessons <= 0) return "not-started";
-  if (course.completedLessons >= course.lessonCount) return "completed";
-  return "in-progress";
-}
-
-function progressPercent(course: EnrolledCourse): number {
-  if (course.lessonCount <= 0) return 0;
-  return Math.round((course.completedLessons / course.lessonCount) * FULL_PROGRESS);
 }
 
 function initials(name: string): string {
@@ -63,8 +56,8 @@ export function EnrolledCourseCard({
   accentIndex,
 }: EnrolledCourseCardProps): React.JSX.Element {
   const cover = COVERS[accentIndex % COVERS.length];
-  const status = progressStatus(course);
-  const percent = progressPercent(course);
+  const status = courseProgressStatus(course);
+  const percent = courseProgressPercent(course);
   const isDone = status === "completed";
   const { label: ctaLabel, icon: CtaIcon } = CTA[status];
   const dashOffset = RING_CIRCUMFERENCE * (1 - percent / FULL_PROGRESS);
