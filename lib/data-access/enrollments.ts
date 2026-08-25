@@ -93,3 +93,28 @@ export async function enrollInCourse(
 
   return { success: true, data: { courseId } };
 }
+
+export async function unenrollFromCourse(
+  courseId: string,
+): Promise<Result<{ courseId: string }>> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return { success: false, error: "User not found" };
+  }
+
+  const { error } = await supabase
+    .from("enrollments")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("course_id", courseId);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, data: { courseId } };
+}

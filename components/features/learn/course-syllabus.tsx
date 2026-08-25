@@ -14,6 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { lessonHref } from "./lesson-spine";
 import { ProgressDial } from "./progress-dial";
+import { LeaveCourseButton } from "./leave-course-button";
 import type { LearnerCourse, LessonSpineItem } from "@/app/types/learn";
 
 interface CourseSyllabusProps {
@@ -142,6 +143,9 @@ export function CourseSyllabus({
           </dl>
 
           {!course.isEnrolled && <NotEnrolledNote />}
+          {course.isEnrolled && (
+            <LeaveCourseButton courseId={course.id} courseTitle={course.title} />
+          )}
         </div>
       </aside>
     </div>
