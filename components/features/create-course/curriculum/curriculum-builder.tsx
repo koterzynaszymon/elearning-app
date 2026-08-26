@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CourseType } from "@/app/types/course";
-import { saveCurriculumDraft } from "@/lib/data-access/lessons";
+import { saveCurriculumDraft, saveLiveCurriculum } from "@/lib/data-access/lessons";
 import { LessonEditor } from "./lesson-editor";
 import { LessonSidebar } from "./lesson-sidebar";
 import type { LessonDraft } from "./types";
@@ -45,6 +45,7 @@ export function CurriculumBuilder({
   initialLessons = [],
 }: CurriculumBuilderProps): React.JSX.Element {
   const router = useRouter();
+  const isPublished = course.status === "published";
   const [lessons, setLessons] = useState<readonly LessonDraft[]>(initialLessons);
   const [activeId, setActiveId] = useState<string | null>(
     initialLessons[0]?.id ?? null,
@@ -93,10 +94,11 @@ export function CurriculumBuilder({
 
   const reorder = useCallback(
     (from: number, to: number): void => {
+      if (isPublished) return;
       setLessons((prev) => reorderList(prev, from, to));
       markDirty();
     },
-    [markDirty],
+    [isPublished, markDirty],
   );
 
   const goRelative = useCallback(
@@ -113,20 +115,21 @@ export function CurriculumBuilder({
 
   const persistDraft = useCallback(async (): Promise<boolean> => {
     setSaveState({ status: "saving" });
-    const result = await saveCurriculumDraft(
-      course.id,
-      lessons.map((lesson) => ({
-        title: lesson.title,
-        content: lesson.content,
-      })),
-    );
+    const input = lessons.map((lesson) => ({
+      id: lesson.id,
+      title: lesson.title,
+      content: lesson.content,
+    }));
+    const result = isPublished
+      ? await saveLiveCurriculum(course.id, input)
+      : await saveCurriculumDraft(course.id, input);
     if (result.success) {
       setSaveState({ status: "saved" });
       return true;
     }
     setSaveState({ status: "error", message: result.error });
     return false;
-  }, [course.id, lessons]);
+  }, [course.id, isPublished, lessons]);
 
   const saveAndGo = useCallback(
     async (href: string): Promise<void> => {
@@ -154,7 +157,7 @@ export function CurriculumBuilder({
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <SaveStatus state={saveState} />
+          <SaveStatus state={saveState} isPublished={isPublished} />
           <Button
             type="button"
             variant="secondary"
@@ -168,7 +171,7 @@ export function CurriculumBuilder({
             ) : (
               <Save className="h-4 w-4" />
             )}
-            Save draft
+            {isPublished ? "Save changes" : "Save draft"}
           </Button>
         </div>
       </div>
@@ -182,6 +185,7 @@ export function CurriculumBuilder({
           onAdd={addLesson}
           onDelete={deleteLesson}
           onReorder={reorder}
+          canReorder={!isPublished}
         />
 
         {activeLesson ? (
@@ -199,7 +203,7 @@ export function CurriculumBuilder({
         )}
       </div>
 
-      {/* Footer nav — both actions save the draft first, so nothing is lost */}
+      {/* Footer nav — both actions save first, so nothing is lost */}
       <div className="flex items-center justify-between gap-4 pt-1">
         <Button
           type="button"
@@ -214,12 +218,16 @@ export function CurriculumBuilder({
         <Button
           type="button"
           onClick={() =>
-            void saveAndGo(`/dashboard/create-course/${course.id}/publish`)
+            void saveAndGo(
+              isPublished
+                ? `/dashboard/author-space/${course.id}`
+                : `/dashboard/create-course/${course.id}/publish`,
+            )
           }
           disabled={isSaving}
           className="group h-11 rounded-full px-6 shadow-glow"
         >
-          Continue to publish
+          {isPublished ? "Save & back to course" : "Continue to publish"}
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </Button>
       </div>
@@ -227,12 +235,18 @@ export function CurriculumBuilder({
   );
 }
 
-function SaveStatus({ state }: { state: SaveState }): React.JSX.Element | null {
+function SaveStatus({
+  state,
+  isPublished,
+}: {
+  state: SaveState;
+  isPublished: boolean;
+}): React.JSX.Element | null {
   if (state.status === "saved") {
     return (
       <span className="inline-flex items-center gap-1.5 text-xs font-bold text-mint">
         <Check className="h-3.5 w-3.5" />
-        Draft saved
+        {isPublished ? "Changes saved" : "Draft saved"}
       </span>
     );
   }

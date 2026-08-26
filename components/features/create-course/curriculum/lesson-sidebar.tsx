@@ -12,6 +12,8 @@ interface LessonSidebarProps {
   readonly onAdd: () => void;
   readonly onDelete: (id: string) => void;
   readonly onReorder: (fromIndex: number, toIndex: number) => void;
+  /** Once a course is published, existing lesson order is frozen — dragging is disabled. */
+  readonly canReorder: boolean;
 }
 
 function lessonLabel(title: string): string {
@@ -26,12 +28,13 @@ export function LessonSidebar({
   onAdd,
   onDelete,
   onReorder,
+  canReorder,
 }: LessonSidebarProps): React.JSX.Element {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
 
   const handleDrop = (toIndex: number): void => {
-    if (dragIndex !== null && dragIndex !== toIndex) {
+    if (canReorder && dragIndex !== null && dragIndex !== toIndex) {
       onReorder(dragIndex, toIndex);
     }
     setDragIndex(null);
@@ -66,10 +69,10 @@ export function LessonSidebar({
               return (
                 <li
                   key={lesson.id}
-                  draggable
-                  onDragStart={() => setDragIndex(index)}
-                  onDragEnter={() => setOverIndex(index)}
-                  onDragOver={(e) => e.preventDefault()}
+                  draggable={canReorder}
+                  onDragStart={() => canReorder && setDragIndex(index)}
+                  onDragEnter={() => canReorder && setOverIndex(index)}
+                  onDragOver={(e) => canReorder && e.preventDefault()}
                   onDrop={() => handleDrop(index)}
                   onDragEnd={() => {
                     setDragIndex(null);
@@ -86,7 +89,12 @@ export function LessonSidebar({
                 >
                   <span
                     aria-hidden
-                    className="flex h-8 w-5 shrink-0 cursor-grab items-center justify-center text-muted-foreground/50 transition-colors group-hover:text-muted-foreground active:cursor-grabbing"
+                    className={cn(
+                      "flex h-8 w-5 shrink-0 items-center justify-center text-muted-foreground/50 transition-colors",
+                      canReorder
+                        ? "cursor-grab group-hover:text-muted-foreground active:cursor-grabbing"
+                        : "opacity-30",
+                    )}
                   >
                     <GripVertical className="h-4 w-4" />
                   </span>

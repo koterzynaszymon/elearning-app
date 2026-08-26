@@ -38,6 +38,7 @@ export default async function CurriculumStepPage({
     title: lesson.title,
     content: lesson.content ?? "",
   }));
+  const isPublished = course.status === "published";
 
   return (
     <div className="flex flex-col gap-8">
@@ -45,15 +46,37 @@ export default async function CurriculumStepPage({
       <header className="animate-pop">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-xs font-bold text-secondary-foreground">
           <Sparkles className="h-3.5 w-3.5 text-primary" />
-          Draft saved
+          {isPublished ? "Live course" : "Draft saved"}
         </span>
         <h1 className="mt-3 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">
-          Add the <span className="text-gradient-brand">curriculum</span>
+          {isPublished ? (
+            <>
+              Edit the <span className="text-gradient-brand">curriculum</span>
+            </>
+          ) : (
+            <>
+              Add the <span className="text-gradient-brand">curriculum</span>
+            </>
+          )}
         </h1>
         <p className="mt-2 max-w-md text-base text-muted-foreground">
-          Your basics are safe. Next you&apos;ll break{" "}
-          <span className="font-semibold text-foreground">{course.title}</span>{" "}
-          into lessons.
+          {isPublished ? (
+            <>
+              Add or remove lessons in{" "}
+              <span className="font-semibold text-foreground">
+                {course.title}
+              </span>
+              . Existing lesson order stays locked.
+            </>
+          ) : (
+            <>
+              Your basics are safe. Next you&apos;ll break{" "}
+              <span className="font-semibold text-foreground">
+                {course.title}
+              </span>{" "}
+              into lessons.
+            </>
+          )}
         </p>
       </header>
 

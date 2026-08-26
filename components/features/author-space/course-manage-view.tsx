@@ -60,15 +60,14 @@ export function CourseManageView({
       {/* Management actions */}
       <section className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         <ManageCard
-          href={isPublished ? undefined : `/dashboard/create-course/${course.id}`}
+          href={`/dashboard/create-course/${course.id}`}
           icon={FileEdit}
           title="Content"
           description={
             isPublished
-              ? "Lesson structure is frozen once a course is published, so learner progress stays intact."
+              ? "Add or remove lessons anytime. Reordering existing lessons is locked once a course is live, so learner progress stays intact."
               : "Edit lessons, curriculum order, and course materials."
           }
-          disabledLabel={isPublished ? "Locked" : undefined}
         />
         <ManageCard
           icon={Users}

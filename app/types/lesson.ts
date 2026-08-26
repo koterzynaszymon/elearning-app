@@ -9,6 +9,7 @@ export type LessonType = {
 };
 
 export type LessonInput = {
+  id: string;
   title: string;
   content: string;
 };
