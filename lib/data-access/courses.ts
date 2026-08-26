@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { hashPassword } from "@/lib/security/password";
 import { CourseType, CreateCourseInput } from "@/app/types/course";
 import { ExploreCourse } from "@/app/types/explore";
+import { AuthoredCourse } from "@/app/types/author";
 import { Result } from "@/app/types/profile";
 
 type PublishedCatalogueRow = {
@@ -28,6 +29,17 @@ function mapPublishedCourse(row: PublishedCatalogueRow): ExploreCourse {
     lessonCount: row.lesson_count,
     studentCount: row.student_count,
     publishedAt: row.updated_at,
+  };
+}
+
+function mapAuthoredCourse(row: CourseType): AuthoredCourse {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description?.trim() ?? "",
+    status: row.status,
+    isPublic: row.is_public,
+    updatedAt: row.updated_at,
   };
 }
 
@@ -104,6 +116,49 @@ export async function getDraftCoursesByAuthor(): Promise<CourseType[]> {
     return [];
   }
   return data as CourseType[];
+}
+
+export async function getCoursesByAuthor(): Promise<AuthoredCourse[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return [];
+  }
+  const { data, error } = await supabase
+    .from("courses")
+    .select("*")
+    .eq("author_id", user.id)
+    .order("updated_at", { ascending: false });
+  if (error) {
+    console.error(error);
+    return [];
+  }
+  return (data as CourseType[]).map(mapAuthoredCourse);
+}
+
+export async function getCourseByIdForAuthor(
+  courseId: string,
+): Promise<CourseType | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return null;
+  }
+  const { data, error } = await supabase
+    .from("courses")
+    .select("*")
+    .eq("id", courseId)
+    .eq("author_id", user.id)
+    .single();
+  if (error) {
+    console.error(error);
+    return null;
+  }
+  return data as CourseType;
 }
 
 export async function publishCourse(

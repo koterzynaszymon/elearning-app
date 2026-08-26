@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  Presentation,
   Settings,
   X,
 } from "lucide-react";
@@ -28,6 +29,7 @@ const NAV_ITEMS: readonly NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/courses", label: "My courses", icon: BookOpen },
   { href: "/dashboard/explore", label: "Explore", icon: Compass },
+  { href: "/dashboard/author-space", label: "Author space", icon: Presentation },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
