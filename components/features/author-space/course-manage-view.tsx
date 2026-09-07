@@ -70,10 +70,19 @@ export function CourseManageView({
           }
         />
         <ManageCard
+          href={
+            isPublished
+              ? `/dashboard/author-space/${course.id}/students`
+              : undefined
+          }
           icon={Users}
           title="Students"
-          description="See who's enrolled and track their progress."
-          disabledLabel="Coming soon"
+          description={
+            isPublished
+              ? "Manage who can access the course and track how far each learner has got."
+              : "Publish the course before learners can enrol."
+          }
+          disabledLabel={isPublished ? undefined : "Publish first"}
         />
         <ManageCard
           icon={Settings}
