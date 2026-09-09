@@ -85,10 +85,10 @@ export function CourseManageView({
           disabledLabel={isPublished ? undefined : "Publish first"}
         />
         <ManageCard
+          href={`/dashboard/author-space/${course.id}/settings`}
           icon={Settings}
           title="Settings"
           description="Manage visibility, password, and course details."
-          disabledLabel="Coming soon"
         />
       </section>
     </div>

@@ -19,3 +19,12 @@ export type CreateCourseInput = {
   isPublic: boolean;
   password: string | null;
 };
+
+export type UpdateCourseSettingsInput = {
+  courseId: string;
+  title: string;
+  description: string | null;
+  isPublic: boolean;
+  /** New password to set. Omit (or leave null) to keep the existing one. */
+  password: string | null;
+};

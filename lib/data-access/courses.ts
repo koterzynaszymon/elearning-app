@@ -1,9 +1,14 @@
 "use server";
 
 import { randomBytes } from "node:crypto";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { hashPassword } from "@/lib/security/password";
-import { CourseType, CreateCourseInput } from "@/app/types/course";
+import {
+  CourseType,
+  CreateCourseInput,
+  UpdateCourseSettingsInput,
+} from "@/app/types/course";
 import { ExploreCourse } from "@/app/types/explore";
 import { AuthoredCourse } from "@/app/types/author";
 import { Result } from "@/app/types/profile";
@@ -184,6 +189,93 @@ export async function publishCourse(
   if (error) {
     return { success: false, error: error.message };
   }
+  return { success: true, data: data as CourseType };
+}
+
+/**
+ * Updates a course's title, description, and visibility. Switching to
+ * private requires a password: pass one to set a new one, or omit it to
+ * keep the course's existing password if it already had one.
+ */
+export async function updateCourseSettings({
+  courseId,
+  title,
+  description,
+  isPublic,
+  password,
+}: UpdateCourseSettingsInput): Promise<Result<CourseType>> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return { success: false, error: "User not found" };
+  }
+
+  title = title.trim();
+  description = description?.trim() || null;
+  password = password?.trim() || null;
+
+  if (title.length < TITLE_MIN || title.length > TITLE_MAX) {
+    return {
+      success: false,
+      error: `Title must be between ${TITLE_MIN} and ${TITLE_MAX} characters`,
+    };
+  }
+  if (description && description.length > DESCRIPTION_MAX) {
+    return {
+      success: false,
+      error: `Description must be ${DESCRIPTION_MAX} characters or fewer`,
+    };
+  }
+
+  const { data: existing, error: fetchError } = await supabase
+    .from("courses")
+    .select("password_hash")
+    .eq("id", courseId)
+    .eq("author_id", user.id)
+    .single();
+  if (fetchError || !existing) {
+    return { success: false, error: "Course not found" };
+  }
+
+  let passwordHash: string | null = existing.password_hash;
+  if (isPublic) {
+    passwordHash = null;
+  } else if (password) {
+    if (password.length < PASSWORD_MIN) {
+      return {
+        success: false,
+        error: `A private course needs a password of at least ${PASSWORD_MIN} characters`,
+      };
+    }
+    passwordHash = await hashPassword(password);
+  } else if (!passwordHash) {
+    return {
+      success: false,
+      error: `A private course needs a password of at least ${PASSWORD_MIN} characters`,
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("courses")
+    .update({
+      title,
+      description,
+      is_public: isPublic,
+      password_hash: passwordHash,
+    })
+    .eq("id", courseId)
+    .eq("author_id", user.id)
+    .select()
+    .single();
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/dashboard/author-space/${courseId}`, "layout");
   return { success: true, data: data as CourseType };
 }
 
