@@ -15,7 +15,7 @@ export default function DashboardLayout({
         <SessionSidebar />
       </Suspense>
       <main className="flex-1">
-        <div className="mx-auto w-full max-w-6xl px-5 py-8 lg:px-10 lg:py-10">
+        <div className="dashboard-container mx-auto w-full max-w-6xl px-5 py-8 lg:px-10 lg:py-10">
           {children}
         </div>
       </main>

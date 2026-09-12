@@ -175,6 +175,18 @@
   }
 }
 
+/* ── Lesson assistant drawer ─────────────────────
+ * On the lesson builder the content is left-aligned instead of centred, so the
+ * assistant drawer has empty space to open into on the right without shoving
+ * the page. This is constant whether the drawer is open or closed — nothing
+ * moves when it is toggled. Below `lg` the drawer overlays the content.
+ */
+@media (min-width: 1024px) {
+  body:has([data-ai-assist-panel]) .dashboard-container {
+    margin-inline: 0;
+  }
+}
+
 /* ── Rich text editor content styling ───────── */
 .rte-content {
   min-height: 18rem;

@@ -1,9 +1,11 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { cn } from "@/lib/utils";
+import { AiAssistPanel } from "./ai-assist/ai-assist-panel";
+import { useLessonAiAssist } from "./ai-assist/use-lesson-ai-assist";
 import type { LessonDraft } from "./types";
 
 const TITLE_MAX = 100;
@@ -30,6 +32,11 @@ export function LessonEditor({
   const canPrev = index > 0;
   const canNext = index < total - 1;
 
+  const assist = useLessonAiAssist({
+    lessonId: lesson.id,
+    lessonTitle: lesson.title,
+  });
+
   return (
     <section className="flex min-w-0 flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
@@ -37,6 +44,20 @@ export function LessonEditor({
           Lesson {index + 1} of {total}
         </span>
         <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={assist.isOpen ? assist.close : assist.open}
+            aria-pressed={assist.isOpen}
+            className={cn(
+              "flex h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-bold transition-colors",
+              assist.isOpen
+                ? "border-primary/40 bg-primary/12 text-primary"
+                : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
+            )}
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            Assistant
+          </button>
           <NavButton
             onClick={onPrev}
             disabled={!canPrev}
@@ -67,8 +88,19 @@ export function LessonEditor({
         key={lesson.id}
         content={lesson.content}
         onChange={onContentChange}
+        onAiAssist={assist.openWithSelection}
         placeholder="Write the lesson here. Use the toolbar for headings, lists, quotes and more…"
         className="min-h-[28rem] shadow-soft"
+      />
+
+      <AiAssistPanel
+        open={assist.isOpen}
+        onClose={assist.close}
+        pendingSelection={assist.pendingSelection}
+        onClearSelection={assist.clearSelection}
+        entries={assist.entries}
+        isBusy={assist.isBusy}
+        onSubmit={assist.submit}
       />
     </section>
   );
