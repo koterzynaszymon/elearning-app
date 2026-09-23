@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, ChevronLeft, ListChecks } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LessonAssistant } from "./ai-assist/lesson-assistant";
 import { LessonContent } from "./lesson-content";
 import { LessonCompletionBar } from "./lesson-completion-bar";
 import { LessonSpine, lessonHref } from "./lesson-spine";
@@ -78,7 +79,9 @@ export function LessonReader({
           </header>
 
           <div className="rounded-3xl border border-border bg-card p-6 shadow-soft sm:p-8">
-            <LessonContent html={lesson.html} />
+            <LessonAssistant lessonId={lesson.id} lessonTitle={lesson.title}>
+              <LessonContent html={lesson.html} />
+            </LessonAssistant>
           </div>
 
           <LessonCompletionBar
