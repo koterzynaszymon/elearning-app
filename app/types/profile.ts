@@ -3,12 +3,14 @@ export type ProfileType = {
   username: string | null;
   bio: string | null;
   email: string | null;
+  avatar_url: string | null;
 };
 
 export type ProfileFormProps = {
   userEmail: string | null;
   initialUsername?: string | null;
   initialBio?: string | null;
+  initialAvatarUrl?: string | null;
 };
 
 export type UpdateProfileInput = {

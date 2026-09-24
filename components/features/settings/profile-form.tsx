@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import {
-  Camera,
   CheckCircle2,
   Lock,
   Loader2,
@@ -15,12 +14,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { updateProfileByUserId } from "@/lib/data-access/profiles";
-import { useRouter } from "next/navigation";
+import { AvatarUploader } from "@/components/features/settings/avatar-uploader";
 
 interface ProfileFormProps {
   userEmail: string;
   initialUsername?: string;
   initialBio?: string;
+  initialAvatarUrl?: string | null;
 }
 
 type SaveState =
@@ -33,6 +33,7 @@ export function ProfileForm({
   userEmail,
   initialUsername = "",
   initialBio = "",
+  initialAvatarUrl = null,
 }: ProfileFormProps): React.JSX.Element {
   const [baseline, setBaseline] = useState({
     username: initialUsername,
@@ -40,10 +41,10 @@ export function ProfileForm({
   });
   const [username, setUsername] = useState(baseline.username);
   const [bio, setBio] = useState(baseline.bio);
+  const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
   const isDirty = username !== baseline.username || bio !== baseline.bio;
   const [saveState, setSaveState] = useState<SaveState>({ status: "idle" });
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
   const avatarInitial = (username || userEmail).charAt(0).toUpperCase();
 
   const handleSubmit = async (
@@ -72,19 +73,11 @@ export function ProfileForm({
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       {/* Avatar + identity preview */}
       <section className="animate-pop flex flex-col items-center gap-4 rounded-3xl border border-border bg-gradient-to-br from-brand-50 to-accent/40 p-8 text-center [animation-delay:80ms] dark:from-card dark:to-accent/20">
-        <div className="relative">
-          <span className="flex h-24 w-24 items-center justify-center rounded-[2rem] bg-gradient-to-br from-brand-400 to-brand-600 font-display text-4xl font-extrabold text-primary-foreground shadow-glow">
-            {avatarInitial}
-          </span>
-          <button
-            type="button"
-            aria-label="Change avatar (coming soon)"
-            title="Avatar upload coming soon"
-            className="absolute -bottom-2 -right-2 flex h-8 w-8 cursor-not-allowed items-center justify-center rounded-full border border-border bg-card text-muted-foreground opacity-60 shadow-soft transition-opacity hover:opacity-80"
-          >
-            <Camera className="h-3.5 w-3.5" />
-          </button>
-        </div>
+        <AvatarUploader
+          initialAvatarUrl={avatarUrl}
+          fallbackInitial={avatarInitial}
+          onAvatarChange={setAvatarUrl}
+        />
 
         <div className="space-y-0.5">
           <p className="font-display text-lg font-extrabold">
@@ -95,7 +88,7 @@ export function ProfileForm({
 
         <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-xs font-bold text-secondary-foreground">
           <Sparkles className="h-3 w-3 text-primary" />
-          Avatar upload coming in a future update
+          PNG, JPEG, or WebP — up to 2MB
         </span>
       </section>
 

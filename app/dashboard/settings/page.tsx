@@ -15,7 +15,7 @@ export default async function SettingsPage(): Promise<React.JSX.Element> {
   if (!profile) {
     throw new Error("Profile not found");
   }
-  const {username = null, bio = null, email = null} = profile as ProfileType;
+  const {username = null, bio = null, email = null, avatar_url = null} = profile as ProfileType;
 
   return (
     <div className="flex flex-col gap-8">
@@ -41,6 +41,7 @@ export default async function SettingsPage(): Promise<React.JSX.Element> {
             userEmail={email || ""}
             initialUsername={username || ""}
             initialBio={bio || ""}
+            initialAvatarUrl={avatar_url}
           />
         </div>
 
