@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowDownWideNarrow,
+  BarChart3,
   Eye,
   EyeOff,
   KeyRound,
@@ -10,6 +11,8 @@ import {
   Lock,
   Search,
   SearchX,
+  Star,
+  Tag,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,8 +20,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { enrollInCourse } from "@/lib/data-access/enrollments";
 import { cn } from "@/lib/utils";
+import { COURSE_CATEGORIES, COURSE_LEVELS } from "@/app/types/course";
+import { CATEGORY_LABELS, LEVEL_LABELS } from "@/lib/constants/course-taxonomy";
 import { CourseCard } from "./course-card";
-import type { ExploreCourse, SortMode, VisibilityFilter } from "./types";
+import type {
+  CategoryFilter,
+  ExploreCourse,
+  LevelFilter,
+  RatingFilter,
+  SortMode,
+  VisibilityFilter,
+} from "./types";
 
 interface ExploreCatalogueProps {
   readonly courses: readonly ExploreCourse[];
@@ -38,7 +50,32 @@ const SORT_MODES: readonly { readonly value: SortMode; readonly label: string }[
   [
     { value: "popular", label: "Most joined" },
     { value: "newest", label: "Newest" },
+    { value: "rating", label: "Top rated" },
     { value: "az", label: "A–Z" },
+  ];
+
+const CATEGORY_FILTERS: readonly { readonly value: CategoryFilter; readonly label: string }[] =
+  [
+    { value: "all", label: "All categories" },
+    ...COURSE_CATEGORIES.map((value) => ({
+      value,
+      label: CATEGORY_LABELS[value],
+    })),
+  ];
+
+const LEVEL_FILTERS: readonly { readonly value: LevelFilter; readonly label: string }[] =
+  [
+    { value: "all", label: "All levels" },
+    ...COURSE_LEVELS.map((value) => ({ value, label: LEVEL_LABELS[value] })),
+  ];
+
+const RATING_FILTERS: readonly { readonly value: RatingFilter; readonly label: string }[] =
+  [
+    { value: "all", label: "Any rating" },
+    { value: 4, label: "4+ stars" },
+    { value: 3, label: "3+ stars" },
+    { value: 2, label: "2+ stars" },
+    { value: 1, label: "1+ stars" },
   ];
 
 function matchesQuery(course: ExploreCourse, query: string): boolean {
@@ -59,6 +96,10 @@ function sortCourses(
       return next.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
     case "popular":
       return next.sort((a, b) => b.studentCount - a.studentCount);
+    case "rating":
+      return next.sort(
+        (a, b) => (b.averageRating ?? -1) - (a.averageRating ?? -1),
+      );
   }
 }
 
@@ -68,6 +109,9 @@ export function ExploreCatalogue({
 }: ExploreCatalogueProps): React.JSX.Element {
   const [query, setQuery] = useState("");
   const [visibility, setVisibility] = useState<VisibilityFilter>("all");
+  const [category, setCategory] = useState<CategoryFilter>("all");
+  const [level, setLevel] = useState<LevelFilter>("all");
+  const [minRating, setMinRating] = useState<RatingFilter>("all");
   const [sort, setSort] = useState<SortMode>("popular");
   const [joined, setJoined] = useState<ReadonlySet<string>>(
     () => new Set(initialJoinedIds),
@@ -81,13 +125,21 @@ export function ExploreCatalogue({
     const filtered = courses.filter((course) => {
       if (visibility === "public" && !course.isPublic) return false;
       if (visibility === "private" && course.isPublic) return false;
+      if (category !== "all" && course.category !== category) return false;
+      if (level !== "all" && course.level !== level) return false;
+      if (
+        minRating !== "all" &&
+        (course.averageRating === null || course.averageRating < minRating)
+      ) {
+        return false;
+      }
       if (normalizedQuery && !matchesQuery(course, normalizedQuery)) {
         return false;
       }
       return true;
     });
     return sortCourses(filtered, sort);
-  }, [courses, query, visibility, sort]);
+  }, [courses, query, visibility, category, level, minRating, sort]);
 
   const markJoined = useCallback((id: string): void => {
     setJoined((prev) => {
@@ -118,8 +170,21 @@ export function ExploreCatalogue({
   );
 
   const hasResults = results.length > 0;
-  const isFiltering = query.trim().length > 0 || visibility !== "all";
+  const isFiltering =
+    query.trim().length > 0 ||
+    visibility !== "all" ||
+    category !== "all" ||
+    level !== "all" ||
+    minRating !== "all";
   const catalogueEmpty = courses.length === 0;
+
+  const resetFilters = useCallback((): void => {
+    setQuery("");
+    setVisibility("all");
+    setCategory("all");
+    setLevel("all");
+    setMinRating("all");
+  }, []);
 
   return (
     <div className="flex flex-col gap-6">
@@ -183,6 +248,56 @@ export function ExploreCatalogue({
             </div>
           </div>
         </div>
+
+        {/* Category, level & rating filters */}
+        <div className="flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:flex-wrap">
+          <FilterGroup icon={Tag} label="Category">
+            {CATEGORY_FILTERS.map(({ value, label }) => (
+              <Pill
+                key={value}
+                active={category === value}
+                onClick={() => setCategory(value)}
+              >
+                {label}
+              </Pill>
+            ))}
+          </FilterGroup>
+
+          <FilterGroup icon={BarChart3} label="Level">
+            {LEVEL_FILTERS.map(({ value, label }) => (
+              <Pill
+                key={value}
+                active={level === value}
+                onClick={() => setLevel(value)}
+              >
+                {label}
+              </Pill>
+            ))}
+          </FilterGroup>
+
+          <FilterGroup icon={Star} label="Rating">
+            {RATING_FILTERS.map(({ value, label }) => (
+              <Pill
+                key={value}
+                active={minRating === value}
+                onClick={() => setMinRating(value)}
+              >
+                {label}
+              </Pill>
+            ))}
+          </FilterGroup>
+
+          {isFiltering && (
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="ml-auto flex items-center gap-1 self-start rounded-full px-3 py-1.5 text-xs font-bold text-muted-foreground transition-colors hover:text-destructive"
+            >
+              <X className="h-3.5 w-3.5" />
+              Clear all filters
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Result count */}
@@ -225,12 +340,7 @@ export function ExploreCatalogue({
       ) : catalogueEmpty ? (
         <CatalogueEmptyState />
       ) : (
-        <EmptyState
-          onReset={() => {
-            setQuery("");
-            setVisibility("all");
-          }}
-        />
+        <EmptyState onReset={resetFilters} />
       )}
 
       {/* Private join modal */}
@@ -244,6 +354,34 @@ export function ExploreCatalogue({
           }}
         />
       )}
+    </div>
+  );
+}
+
+interface FilterGroupProps {
+  readonly icon: React.ComponentType<{ className?: string }>;
+  readonly label: string;
+  readonly children: React.ReactNode;
+}
+
+function FilterGroup({
+  icon: Icon,
+  label,
+  children,
+}: FilterGroupProps): React.JSX.Element {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+        <Icon className="h-3.5 w-3.5" />
+        {label}
+      </span>
+      <div
+        role="radiogroup"
+        aria-label={`Filter by ${label.toLowerCase()}`}
+        className="flex flex-wrap items-center gap-1 rounded-full bg-secondary/60 p-1"
+      >
+        {children}
+      </div>
     </div>
   );
 }

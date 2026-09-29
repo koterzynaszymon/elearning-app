@@ -1,8 +1,18 @@
 "use client";
 
-import { BookOpen, Check, Globe, Loader2, Lock, Users } from "lucide-react";
+import {
+  BarChart3,
+  BookOpen,
+  Check,
+  Globe,
+  Loader2,
+  Lock,
+  Star,
+  Users,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { CATEGORY_LABELS, LEVEL_LABELS } from "@/lib/constants/course-taxonomy";
 import type { ExploreCourse } from "./types";
 
 const COVERS: readonly string[] = [
@@ -74,7 +84,17 @@ export function CourseCard({
 
       {/* Body */}
       <div className="flex flex-1 flex-col p-5 justify-between">
-        <h3 className="line-clamp-2 break-words font-display text-lg font-extrabold leading-tight">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold text-primary">
+            {CATEGORY_LABELS[course.category]}
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[10px] font-bold text-secondary-foreground">
+            <BarChart3 className="h-2.5 w-2.5" />
+            {LEVEL_LABELS[course.level]}
+          </span>
+        </div>
+
+        <h3 className="mt-2 line-clamp-2 break-words font-display text-lg font-extrabold leading-tight">
           {course.title}
         </h3>
         <p className="mt-1.5 line-clamp-2 break-words text-sm leading-relaxed text-muted-foreground">
@@ -91,7 +111,7 @@ export function CourseCard({
           </span>
         </div>
 
-        <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
             <BookOpen className="h-3.5 w-3.5" />
             {course.lessonCount} lessons
@@ -99,6 +119,24 @@ export function CourseCard({
           <span className="inline-flex items-center gap-1.5">
             <Users className="h-3.5 w-3.5" />
             {course.studentCount.toLocaleString()}
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Star
+              className={cn(
+                "h-3.5 w-3.5",
+                course.averageRating !== null && "fill-amber-400 text-amber-400",
+              )}
+            />
+            {course.averageRating !== null ? (
+              <>
+                {course.averageRating.toFixed(1)}
+                <span className="text-muted-foreground/70">
+                  ({course.ratingCount})
+                </span>
+              </>
+            ) : (
+              "No ratings yet"
+            )}
           </span>
         </div>
 
