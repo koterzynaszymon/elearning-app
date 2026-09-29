@@ -28,7 +28,7 @@ async function SyllabusContent({
     notFound();
   }
 
-  const { course, lessons } = view;
+  const { course, lessons, ratingSummary } = view;
 
   return (
     <div className="flex flex-col gap-8">
@@ -47,7 +47,11 @@ async function SyllabusContent({
         )}
       </header>
 
-      <CourseSyllabus course={course} lessons={lessons} />
+      <CourseSyllabus
+        course={course}
+        lessons={lessons}
+        ratingSummary={ratingSummary}
+      />
     </div>
   );
 }

@@ -16,11 +16,17 @@ import { cn } from "@/lib/utils";
 import { lessonHref } from "./lesson-spine";
 import { ProgressDial } from "./progress-dial";
 import { LeaveCourseButton } from "./leave-course-button";
-import type { LearnerCourse, LessonSpineItem } from "@/app/types/learn";
+import { CourseRating } from "./course-rating";
+import type {
+  CourseRatingSummary,
+  LearnerCourse,
+  LessonSpineItem,
+} from "@/app/types/learn";
 
 interface CourseSyllabusProps {
   readonly course: LearnerCourse;
   readonly lessons: readonly LessonSpineItem[];
+  readonly ratingSummary: CourseRatingSummary;
 }
 
 interface ContinueTarget {
@@ -43,6 +49,7 @@ function continueTarget(lessons: readonly LessonSpineItem[]): ContinueTarget {
 export function CourseSyllabus({
   course,
   lessons,
+  ratingSummary,
 }: CourseSyllabusProps): React.JSX.Element {
   if (lessons.length === 0) {
     return <NoLessonsYet />;
@@ -142,6 +149,12 @@ export function CourseSyllabus({
               value={course.isPublic ? "Public" : "Private"}
             />
           </dl>
+
+          <CourseRating
+            courseId={course.id}
+            isEnrolled={course.isEnrolled}
+            summary={ratingSummary}
+          />
 
           <Link
             href={`/dashboard/courses/${course.id}/questions`}
