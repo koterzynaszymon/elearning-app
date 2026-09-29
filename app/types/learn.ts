@@ -21,9 +21,18 @@ export type ReadableLesson = {
   readonly isCompleted: boolean;
 };
 
+export type CourseRatingSummary = {
+  /** Null when the course has no ratings yet. */
+  readonly average: number | null;
+  readonly count: number;
+  /** The current user's own rating, or null if they haven't rated it. */
+  readonly myRating: number | null;
+};
+
 export type CourseSyllabusView = {
   readonly course: LearnerCourse;
   readonly lessons: readonly LessonSpineItem[];
+  readonly ratingSummary: CourseRatingSummary;
 };
 
 export type LessonReaderView = {
