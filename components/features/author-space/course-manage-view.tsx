@@ -5,6 +5,7 @@ import {
   FileEdit,
   Globe,
   Lock,
+  MessageCircleQuestion,
   Rocket,
   Settings,
   Users,
@@ -81,6 +82,21 @@ export function CourseManageView({
             isPublished
               ? "Manage who can access the course and track how far each learner has got."
               : "Publish the course before learners can enrol."
+          }
+          disabledLabel={isPublished ? undefined : "Publish first"}
+        />
+        <ManageCard
+          href={
+            isPublished
+              ? `/dashboard/author-space/${course.id}/questions`
+              : undefined
+          }
+          icon={MessageCircleQuestion}
+          title="Q&A"
+          description={
+            isPublished
+              ? "Answer questions learners ask about this course."
+              : "Publish the course before learners can ask questions."
           }
           disabledLabel={isPublished ? undefined : "Publish first"}
         />

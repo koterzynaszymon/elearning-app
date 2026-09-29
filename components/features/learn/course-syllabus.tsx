@@ -7,6 +7,7 @@ import {
   Globe,
   Info,
   Lock,
+  MessageCircleQuestion,
   PlayCircle,
   RotateCcw,
   Sparkles,
@@ -141,6 +142,14 @@ export function CourseSyllabus({
               value={course.isPublic ? "Public" : "Private"}
             />
           </dl>
+
+          <Link
+            href={`/dashboard/courses/${course.id}/questions`}
+            className="group flex items-center justify-center gap-2 rounded-full border border-border px-4 py-2.5 text-sm font-bold text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+          >
+            <MessageCircleQuestion className="h-4 w-4" />
+            Course Q&amp;A
+          </Link>
 
           {!course.isEnrolled && <NotEnrolledNote />}
           {course.isEnrolled && (
