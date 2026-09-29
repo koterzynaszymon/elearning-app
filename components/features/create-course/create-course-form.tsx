@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
+  BarChart3,
   BookOpen,
   Eye,
   EyeOff,
@@ -13,6 +14,7 @@ import {
   Loader2,
   Lock,
   Sparkles,
+  Tag,
   Type,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,6 +23,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { createCourseDraft } from "@/lib/data-access/courses";
+import {
+  COURSE_CATEGORIES,
+  COURSE_LEVELS,
+  type CourseCategory,
+  type CourseLevel,
+} from "@/app/types/course";
+import { CATEGORY_LABELS, LEVEL_LABELS } from "@/lib/constants/course-taxonomy";
 
 const TITLE_MAX = 80;
 const DESCRIPTION_MAX = 320;
@@ -63,6 +72,8 @@ export function CreateCourseForm(): React.JSX.Element {
   const [visibility, setVisibility] = useState<Visibility>("public");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [category, setCategory] = useState<CourseCategory>("other");
+  const [level, setLevel] = useState<CourseLevel>("beginner");
   const [submitState, setSubmitState] = useState<SubmitState>({
     status: "idle",
   });
@@ -85,6 +96,8 @@ export function CreateCourseForm(): React.JSX.Element {
       description: description.trim() || null,
       isPublic: !isPrivate,
       password: isPrivate ? password : null,
+      category,
+      level,
     });
 
     if (result.success) {
@@ -160,6 +173,85 @@ export function CreateCourseForm(): React.JSX.Element {
               <p className="text-right text-xs text-muted-foreground">
                 {description.length} / {DESCRIPTION_MAX}
               </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Category & level card */}
+        <section className="animate-pop rounded-3xl border border-border bg-card p-6 shadow-soft [animation-delay:120ms]">
+          <div className="mb-5 flex items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <Tag className="h-4 w-4" />
+            </span>
+            <div>
+              <h2 className="font-display text-lg font-bold leading-tight">
+                Classify it
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Helps students find your course in the catalogue.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-1.5">
+              <Label className="flex items-center gap-1.5 text-sm font-bold">
+                <Tag className="h-3.5 w-3.5 text-primary" />
+                Category
+              </Label>
+              <div
+                role="radiogroup"
+                aria-label="Course category"
+                className="flex flex-wrap gap-1.5"
+              >
+                {COURSE_CATEGORIES.map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    role="radio"
+                    aria-checked={category === value}
+                    onClick={() => setCategory(value)}
+                    className={cn(
+                      "rounded-full border-2 px-3.5 py-1.5 text-xs font-bold transition-colors",
+                      category === value
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                    )}
+                  >
+                    {CATEGORY_LABELS[value]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label className="flex items-center gap-1.5 text-sm font-bold">
+                <BarChart3 className="h-3.5 w-3.5 text-primary" />
+                Level
+              </Label>
+              <div
+                role="radiogroup"
+                aria-label="Course level"
+                className="flex flex-wrap gap-1.5"
+              >
+                {COURSE_LEVELS.map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    role="radio"
+                    aria-checked={level === value}
+                    onClick={() => setLevel(value)}
+                    className={cn(
+                      "rounded-full border-2 px-3.5 py-1.5 text-xs font-bold transition-colors",
+                      level === value
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                    )}
+                  >
+                    {LEVEL_LABELS[value]}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </section>

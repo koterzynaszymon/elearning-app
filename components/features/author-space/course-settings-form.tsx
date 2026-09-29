@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  BarChart3,
   Check,
   Eye,
   EyeOff,
@@ -11,6 +12,7 @@ import {
   Loader2,
   Lock,
   Save,
+  Tag,
   Type,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +21,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { updateCourseSettings } from "@/lib/data-access/courses";
+import {
+  COURSE_CATEGORIES,
+  COURSE_LEVELS,
+  type CourseCategory,
+  type CourseLevel,
+} from "@/app/types/course";
+import { CATEGORY_LABELS, LEVEL_LABELS } from "@/lib/constants/course-taxonomy";
 
 const TITLE_MAX = 80;
 const DESCRIPTION_MAX = 320;
@@ -60,6 +69,8 @@ interface CourseSettingsFormProps {
   readonly description: string;
   readonly isPublic: boolean;
   readonly hasPassword: boolean;
+  readonly category: CourseCategory;
+  readonly level: CourseLevel;
 }
 
 export function CourseSettingsForm({
@@ -68,6 +79,8 @@ export function CourseSettingsForm({
   description: initialDescription,
   isPublic: initialIsPublic,
   hasPassword: initialHasPassword,
+  category: initialCategory,
+  level: initialLevel,
 }: CourseSettingsFormProps): React.JSX.Element {
   const router = useRouter();
   const [title, setTitle] = useState(initialTitle);
@@ -76,6 +89,8 @@ export function CourseSettingsForm({
     initialIsPublic ? "public" : "private",
   );
   const [password, setPassword] = useState("");
+  const [category, setCategory] = useState<CourseCategory>(initialCategory);
+  const [level, setLevel] = useState<CourseLevel>(initialLevel);
   const [showPassword, setShowPassword] = useState(false);
   const [hasPassword, setHasPassword] = useState(initialHasPassword);
   const [submitState, setSubmitState] = useState<SubmitState>({
@@ -108,6 +123,8 @@ export function CourseSettingsForm({
       description: description.trim() || null,
       isPublic: !isPrivate,
       password: isPrivate ? password.trim() || null : null,
+      category,
+      level,
     });
 
     if (result.success) {
@@ -187,6 +204,91 @@ export function CourseSettingsForm({
             <p className="text-right text-xs text-muted-foreground">
               {description.length} / {DESCRIPTION_MAX}
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Category & level card */}
+      <section className="animate-pop rounded-3xl border border-border bg-card p-6 shadow-soft [animation-delay:40ms]">
+        <div className="mb-5 flex items-center gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <Tag className="h-4 w-4" />
+          </span>
+          <div>
+            <h2 className="font-display text-lg font-bold leading-tight">
+              Classify it
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Helps students find this course in the catalogue.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-1.5">
+            <Label className="flex items-center gap-1.5 text-sm font-bold">
+              <Tag className="h-3.5 w-3.5 text-primary" />
+              Category
+            </Label>
+            <div
+              role="radiogroup"
+              aria-label="Course category"
+              className="flex flex-wrap gap-1.5"
+            >
+              {COURSE_CATEGORIES.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  role="radio"
+                  aria-checked={category === value}
+                  onClick={() => {
+                    setCategory(value);
+                    resetFeedback();
+                  }}
+                  className={cn(
+                    "rounded-full border-2 px-3.5 py-1.5 text-xs font-bold transition-colors",
+                    category === value
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                  )}
+                >
+                  {CATEGORY_LABELS[value]}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label className="flex items-center gap-1.5 text-sm font-bold">
+              <BarChart3 className="h-3.5 w-3.5 text-primary" />
+              Level
+            </Label>
+            <div
+              role="radiogroup"
+              aria-label="Course level"
+              className="flex flex-wrap gap-1.5"
+            >
+              {COURSE_LEVELS.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  role="radio"
+                  aria-checked={level === value}
+                  onClick={() => {
+                    setLevel(value);
+                    resetFeedback();
+                  }}
+                  className={cn(
+                    "rounded-full border-2 px-3.5 py-1.5 text-xs font-bold transition-colors",
+                    level === value
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                  )}
+                >
+                  {LEVEL_LABELS[value]}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </section>

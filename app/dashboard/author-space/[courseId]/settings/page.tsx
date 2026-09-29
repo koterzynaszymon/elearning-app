@@ -46,6 +46,8 @@ export default async function CourseSettingsPage({
           description={course.description ?? ""}
           isPublic={course.is_public}
           hasPassword={course.password_hash !== null}
+          category={course.category}
+          level={course.level}
         />
       </div>
     </div>
