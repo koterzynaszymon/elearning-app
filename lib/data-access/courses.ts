@@ -5,6 +5,10 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { hashPassword } from "@/lib/security/password";
 import {
+  COURSE_CATEGORIES,
+  COURSE_LEVELS,
+  CourseCategory,
+  CourseLevel,
   CourseType,
   CreateCourseInput,
   UpdateCourseSettingsInput,
@@ -22,7 +26,19 @@ type PublishedCatalogueRow = {
   author_name: string;
   lesson_count: number;
   student_count: number;
+  category: CourseCategory;
+  level: CourseLevel;
+  avg_rating: number | null;
+  rating_count: number;
 };
+
+function isCourseCategory(value: string): value is CourseCategory {
+  return (COURSE_CATEGORIES as readonly string[]).includes(value);
+}
+
+function isCourseLevel(value: string): value is CourseLevel {
+  return (COURSE_LEVELS as readonly string[]).includes(value);
+}
 
 function mapPublishedCourse(row: PublishedCatalogueRow): ExploreCourse {
   return {
@@ -34,6 +50,10 @@ function mapPublishedCourse(row: PublishedCatalogueRow): ExploreCourse {
     lessonCount: row.lesson_count,
     studentCount: row.student_count,
     publishedAt: row.updated_at,
+    category: isCourseCategory(row.category) ? row.category : "other",
+    level: isCourseLevel(row.level) ? row.level : "beginner",
+    averageRating: row.avg_rating,
+    ratingCount: row.rating_count,
   };
 }
 
@@ -192,17 +212,15 @@ export async function publishCourse(
   return { success: true, data: data as CourseType };
 }
 
-/**
- * Updates a course's title, description, and visibility. Switching to
- * private requires a password: pass one to set a new one, or omit it to
- * keep the course's existing password if it already had one.
- */
+
 export async function updateCourseSettings({
   courseId,
   title,
   description,
   isPublic,
   password,
+  category,
+  level,
 }: UpdateCourseSettingsInput): Promise<Result<CourseType>> {
   const supabase = await createClient();
   const {
@@ -228,6 +246,12 @@ export async function updateCourseSettings({
       success: false,
       error: `Description must be ${DESCRIPTION_MAX} characters or fewer`,
     };
+  }
+  if (!isCourseCategory(category)) {
+    return { success: false, error: "Invalid category" };
+  }
+  if (!isCourseLevel(level)) {
+    return { success: false, error: "Invalid level" };
   }
 
   const { data: existing, error: fetchError } = await supabase
@@ -265,6 +289,8 @@ export async function updateCourseSettings({
       description,
       is_public: isPublic,
       password_hash: passwordHash,
+      category,
+      level,
     })
     .eq("id", courseId)
     .eq("author_id", user.id)
@@ -284,6 +310,8 @@ export async function createCourseDraft({
   description,
   isPublic,
   password,
+  category,
+  level,
 }: CreateCourseInput): Promise<Result<CourseType>> {
   const supabase = await createClient();
   const {
@@ -316,6 +344,12 @@ export async function createCourseDraft({
       error: `A private course needs a password of at least ${PASSWORD_MIN} characters`,
     };
   }
+  if (!isCourseCategory(category)) {
+    return { success: false, error: "Invalid category" };
+  }
+  if (!isCourseLevel(level)) {
+    return { success: false, error: "Invalid level" };
+  }
 
   const passwordHash =
     isPublic || !password ? null : await hashPassword(password);
@@ -329,6 +363,8 @@ export async function createCourseDraft({
       description,
       is_public: isPublic,
       password_hash: passwordHash,
+      category,
+      level,
     })
     .select()
     .single();

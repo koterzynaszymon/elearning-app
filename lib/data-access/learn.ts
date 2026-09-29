@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getCourseRatingSummary } from "@/lib/data-access/course-ratings";
 import type {
   CourseSyllabusView,
   LearnerCourse,
@@ -80,9 +81,12 @@ export async function getCourseSyllabus(
     return null;
   }
 
+  const ratingSummary = await getCourseRatingSummary(courseId);
+
   return {
     course: toCourse(header),
     lessons: toSpine(rows.filter(hasLesson)),
+    ratingSummary,
   };
 }
 
