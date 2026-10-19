@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useAssistDrawerLayout } from "@/components/shared/use-assist-drawer-layout";
 import { cn } from "@/lib/utils";
 import { AI_HELP_PRESETS } from "./presets";
 import type { AiHelpEntry } from "./types";
@@ -44,6 +45,7 @@ export function AiAssistPanel({
   useEffect(() => {
     setMounted(true);
   }, []);
+  useAssistDrawerLayout();
 
   useEffect(() => {
     if (!open) return;

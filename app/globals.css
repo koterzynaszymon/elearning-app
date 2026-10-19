@@ -182,7 +182,8 @@
  * moves when it is toggled. Below `lg` the drawer overlays the content.
  */
 @media (min-width: 1024px) {
-  body:has([data-ai-assist-panel]) .dashboard-container {
+  /* Set by useAssistDrawerLayout — see that hook for why this isn't :has(). */
+  body[data-ai-assist-layout] .dashboard-container {
     margin-inline: 0;
   }
 }
