@@ -8,6 +8,20 @@ export type LessonType = {
   updated_at: string;
 };
 
+export type LessonAttachment = {
+  readonly id: string;
+  readonly lessonId: string;
+  readonly fileName: string;
+  readonly fileType: string;
+  readonly fileSize: number;
+  readonly uploadedAt: string;
+};
+
+export type AttachmentUploadTicket = {
+  readonly path: string;
+  readonly token: string;
+};
+
 export type LessonInput = {
   id: string;
   title: string;
