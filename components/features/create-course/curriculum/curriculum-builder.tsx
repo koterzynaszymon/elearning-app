@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -13,15 +13,25 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CourseType } from "@/app/types/course";
+import type { LessonAttachment } from "@/app/types/lesson";
 import { saveCurriculumDraft, saveLiveCurriculum } from "@/lib/data-access/lessons";
+import {
+  LessonAttachmentsTray,
+  type AttachmentsUpdater,
+} from "./attachments/lesson-attachments-tray";
 import { LessonEditor } from "./lesson-editor";
 import { LessonSidebar } from "./lesson-sidebar";
 import type { LessonDraft } from "./types";
 
+type AttachmentsByLesson = Readonly<Record<string, readonly LessonAttachment[]>>;
+
 interface CurriculumBuilderProps {
   readonly course: CourseType;
   readonly initialLessons?: readonly LessonDraft[];
+  readonly initialAttachments?: AttachmentsByLesson;
 }
+
+const NO_ATTACHMENTS: readonly LessonAttachment[] = [];
 
 type SaveState =
   | { status: "idle" }
@@ -43,6 +53,7 @@ function reorderList<T>(list: readonly T[], from: number, to: number): T[] {
 export function CurriculumBuilder({
   course,
   initialLessons = [],
+  initialAttachments = {},
 }: CurriculumBuilderProps): React.JSX.Element {
   const router = useRouter();
   const isPublished = course.status === "published";
@@ -51,6 +62,22 @@ export function CurriculumBuilder({
     initialLessons[0]?.id ?? null,
   );
   const [saveState, setSaveState] = useState<SaveState>({ status: "idle" });
+  const [attachments, setAttachments] =
+    useState<AttachmentsByLesson>(initialAttachments);
+  // Lesson ids known to exist in the database — attachments need a real row.
+  const persistedIdsRef = useRef<ReadonlySet<string>>(
+    new Set(initialLessons.map((lesson) => lesson.id)),
+  );
+
+  const updateAttachments = useCallback(
+    (lessonId: string, update: AttachmentsUpdater): void => {
+      setAttachments((prev) => ({
+        ...prev,
+        [lessonId]: update(prev[lessonId] ?? NO_ATTACHMENTS),
+      }));
+    },
+    [],
+  );
 
   const markDirty = useCallback((): void => {
     setSaveState((prev) =>
@@ -124,12 +151,22 @@ export function CurriculumBuilder({
       ? await saveLiveCurriculum(course.id, input)
       : await saveCurriculumDraft(course.id, input);
     if (result.success) {
+      persistedIdsRef.current = new Set(result.data.map((lesson) => lesson.id));
       setSaveState({ status: "saved" });
       return true;
     }
     setSaveState({ status: "error", message: result.error });
     return false;
   }, [course.id, isPublished, lessons]);
+
+  const ensureLessonSaved = useCallback(
+    async (lessonId: string): Promise<boolean> => {
+      if (persistedIdsRef.current.has(lessonId)) return true;
+      const ok = await persistDraft();
+      return ok && persistedIdsRef.current.has(lessonId);
+    },
+    [persistDraft],
+  );
 
   const saveAndGo = useCallback(
     async (href: string): Promise<void> => {
@@ -197,6 +234,15 @@ export function CurriculumBuilder({
             onContentChange={(content) => updateActive({ content })}
             onPrev={() => goRelative(-1)}
             onNext={() => goRelative(1)}
+            attachments={
+              <LessonAttachmentsTray
+                key={activeLesson.id}
+                lessonId={activeLesson.id}
+                attachments={attachments[activeLesson.id] ?? NO_ATTACHMENTS}
+                onAttachmentsChange={updateAttachments}
+                ensureLessonSaved={ensureLessonSaved}
+              />
+            }
           />
         ) : (
           <EmptyState onAdd={addLesson} />

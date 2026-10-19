@@ -18,6 +18,8 @@ interface LessonEditorProps {
   readonly onContentChange: (html: string) => void;
   readonly onPrev: () => void;
   readonly onNext: () => void;
+  /** Rendered under the editor — the lesson's file attachments. */
+  readonly attachments?: React.ReactNode;
 }
 
 export function LessonEditor({
@@ -28,6 +30,7 @@ export function LessonEditor({
   onContentChange,
   onPrev,
   onNext,
+  attachments,
 }: LessonEditorProps): React.JSX.Element {
   const canPrev = index > 0;
   const canNext = index < total - 1;
@@ -92,6 +95,8 @@ export function LessonEditor({
         placeholder="Write the lesson here. Use the toolbar for headings, lists, quotes and more…"
         className="min-h-[28rem] shadow-soft"
       />
+
+      {attachments}
 
       <AiAssistPanel
         open={assist.isOpen}

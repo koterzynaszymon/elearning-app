@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getLessonAtPosition } from "@/lib/data-access/learn";
+import { getLessonAttachments } from "@/lib/data-access/lesson-attachments";
 import { LessonReader } from "@/components/features/learn/lesson-reader";
 import { ReaderSkeleton } from "@/components/features/learn/learn-skeletons";
 
@@ -43,11 +44,14 @@ async function ReaderContent({
     notFound();
   }
 
+  const attachments = await getLessonAttachments(view.lesson.id);
+
   return (
     <LessonReader
       course={view.course}
       lesson={view.lesson}
       spine={view.spine}
+      attachments={attachments}
     />
   );
 }
