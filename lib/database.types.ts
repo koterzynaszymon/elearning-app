@@ -202,25 +202,28 @@ export type Database = {
       lesson_attachments: {
         Row: {
           file_name: string;
+          file_size: number;
           file_type: string;
-          file_url: string;
           id: string;
           lesson_id: string;
+          storage_path: string;
           uploaded_at: string;
         };
         Insert: {
           file_name: string;
+          file_size: number;
           file_type: string;
-          file_url: string;
           id?: string;
           lesson_id: string;
+          storage_path: string;
           uploaded_at?: string;
         };
         Update: {
           file_name?: string;
+          file_size?: number;
           file_type?: string;
-          file_url?: string;
           id?: string;
+          storage_path?: string;
           lesson_id?: string;
           uploaded_at?: string;
         };
