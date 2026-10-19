@@ -3,6 +3,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { LessonInput, LessonType } from "@/app/types/lesson";
 import { Result } from "@/app/types/profile";
+import {
+  getAttachmentPathsForLessons,
+  removeAttachmentObjects,
+} from "@/lib/data-access/attachment-storage";
 
 const TITLE_MAX = 100;
 const FIRST_ORDER_INDEX = 1;
@@ -52,13 +56,41 @@ async function getOwnedCourse(
 }
 
 /**
- * Replaces the full lesson set for a draft course in one shot.
+ * Deletes the given lessons (cascading their attachment rows), then removes
+ * the attachments' Storage objects, which no FK cascade can reach.
+ */
+async function deleteLessonsWithAttachments(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  courseId: string,
+  lessonIds: readonly string[],
+): Promise<Result<null>> {
+  if (lessonIds.length === 0) {
+    return { success: true, data: null };
+  }
+
+  const attachmentPaths = await getAttachmentPathsForLessons(supabase, lessonIds);
+
+  const { error } = await supabase
+    .from("lessons")
+    .delete()
+    .eq("course_id", courseId)
+    .in("id", lessonIds);
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  await removeAttachmentObjects(supabase, attachmentPaths);
+  return { success: true, data: null };
+}
+
+/**
+ * Syncs a draft course's lessons to exactly the submitted list and order.
  *
- * Destroying and re-creating rows discards lesson ids, which would take any
- * `lesson_completions` rows with them. That is safe only because nobody can
- * enroll in a draft, so a draft reaching this function has no completions to
- * lose. Once a course is published, use `saveLiveCurriculum` instead, which
- * preserves lesson ids so existing progress survives.
+ * Lesson ids are preserved, so attachments survive a save. Existing lessons
+ * are re-indexed in a single upsert statement: `lessons_course_order_unique`
+ * is DEFERRABLE INITIALLY DEFERRED, so swapped positions are only checked at
+ * commit. Reordering is only allowed here because nobody can enroll in a
+ * draft; once published, use `saveLiveCurriculum`.
  */
 export async function saveCurriculumDraft(
   courseId: string,
@@ -83,30 +115,55 @@ export async function saveCurriculumDraft(
     return { success: false, error: titleError };
   }
 
-  const { error: deleteError } = await supabase
+  const { data: existingLessons, error: existingError } = await supabase
     .from("lessons")
-    .delete()
+    .select("id")
     .eq("course_id", courseId);
-  if (deleteError) {
-    return { success: false, error: deleteError.message };
+  if (existingError) {
+    return { success: false, error: existingError.message };
   }
 
-  if (lessons.length === 0) {
-    return { success: true, data: [] };
+  const existingIds = new Set(existingLessons.map((lesson) => lesson.id));
+  const submittedIds = new Set(lessons.map((lesson) => lesson.id));
+
+  const removed = await deleteLessonsWithAttachments(
+    supabase,
+    courseId,
+    [...existingIds].filter((id) => !submittedIds.has(id)),
+  );
+  if (!removed.success) {
+    return removed;
   }
 
   const rows = lessons.map((lesson, index) => ({
+    id: lesson.id,
     course_id: courseId,
     title: lesson.title.trim() || "Untitled lesson",
     content: lesson.content.length > 0 ? lesson.content : null,
     order_index: index + FIRST_ORDER_INDEX,
   }));
+  // Kept lessons are upserted; new ones go through a plain insert so a
+  // submitted id can never hijack a lesson from another course.
+  const kept = rows.filter((row) => existingIds.has(row.id));
+  const added = rows.filter((row) => !existingIds.has(row.id));
 
-  const { data, error } = await supabase.from("lessons").insert(rows).select();
-  if (error) {
-    return { success: false, error: error.message };
+  if (kept.length > 0) {
+    const { error } = await supabase
+      .from("lessons")
+      .upsert(kept, { onConflict: "id" });
+    if (error) {
+      return { success: false, error: error.message };
+    }
   }
-  return { success: true, data: data as LessonType[] };
+
+  if (added.length > 0) {
+    const { error } = await supabase.from("lessons").insert(added);
+    if (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  return { success: true, data: await getLessonsByCourse(courseId) };
 }
 
 /**
@@ -156,15 +213,9 @@ export async function saveLiveCurriculum(
     .map((lesson) => lesson.id)
     .filter((id) => !submittedIds.has(id));
 
-  if (toDeleteIds.length > 0) {
-    const { error: deleteError } = await supabase
-      .from("lessons")
-      .delete()
-      .eq("course_id", courseId)
-      .in("id", toDeleteIds);
-    if (deleteError) {
-      return { success: false, error: deleteError.message };
-    }
+  const removed = await deleteLessonsWithAttachments(supabase, courseId, toDeleteIds);
+  if (!removed.success) {
+    return removed;
   }
 
   let nextOrderIndex =
