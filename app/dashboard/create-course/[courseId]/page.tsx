@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { Check, ListChecks, Rocket, Sparkles, Type } from "lucide-react";
 import { getCourseById } from "@/lib/data-access/courses";
 import { getLessonsByCourse } from "@/lib/data-access/lessons";
+import { getAttachmentsByLessonIds } from "@/lib/data-access/lesson-attachments";
 import { CurriculumBuilder } from "@/components/features/create-course/curriculum/curriculum-builder";
 import type { LessonDraft } from "@/components/features/create-course/curriculum/types";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,9 @@ export default async function CurriculumStepPage({
     title: lesson.title,
     content: lesson.content ?? "",
   }));
+  const initialAttachments = await getAttachmentsByLessonIds(
+    lessons.map((lesson) => lesson.id),
+  );
   const isPublished = course.status === "published";
 
   return (
@@ -118,7 +122,11 @@ export default async function CurriculumStepPage({
 
       {/* Lesson builder */}
       <div className="animate-pop [animation-delay:80ms]">
-        <CurriculumBuilder course={course} initialLessons={initialLessons} />
+        <CurriculumBuilder
+          course={course}
+          initialLessons={initialLessons}
+          initialAttachments={initialAttachments}
+        />
       </div>
     </div>
   );

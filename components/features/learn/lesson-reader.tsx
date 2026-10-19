@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { LessonAssistant } from "./ai-assist/lesson-assistant";
 import { LessonContent } from "./lesson-content";
 import { LessonCompletionBar } from "./lesson-completion-bar";
+import { LessonMaterials } from "./lesson-materials";
 import { LessonSpine, lessonHref } from "./lesson-spine";
 import { ProgressDial } from "./progress-dial";
 import type {
@@ -12,11 +13,13 @@ import type {
   LessonSpineItem,
   ReadableLesson,
 } from "@/app/types/learn";
+import type { LessonAttachment } from "@/app/types/lesson";
 
 interface LessonReaderProps {
   readonly course: LearnerCourse;
   readonly lesson: ReadableLesson;
   readonly spine: readonly LessonSpineItem[];
+  readonly attachments: readonly LessonAttachment[];
 }
 
 function completionStateOf(
@@ -32,6 +35,7 @@ export function LessonReader({
   course,
   lesson,
   spine,
+  attachments,
 }: LessonReaderProps): React.JSX.Element {
   const completedCount = spine.filter((item) => item.isCompleted).length;
   const hasPrev = lesson.position > 1;
@@ -83,6 +87,8 @@ export function LessonReader({
               <LessonContent html={lesson.html} />
             </LessonAssistant>
           </div>
+
+          <LessonMaterials attachments={attachments} />
 
           <LessonCompletionBar
             courseId={course.id}
