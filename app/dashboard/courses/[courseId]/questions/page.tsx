@@ -3,7 +3,10 @@ import { MessageCircleQuestion } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getCourseSyllabus } from "@/lib/data-access/learn";
 import { getCourseQuestions } from "@/lib/data-access/course-questions";
+import { getAnswersLastSeenAt } from "@/lib/data-access/question-reads";
+import { isNewAnswerFor } from "@/lib/unread-answers";
 import { AskQuestionForm } from "@/components/features/course-questions/ask-question-form";
+import { MarkAnswersSeen } from "@/components/features/course-questions/mark-answers-seen";
 import { QuestionList } from "@/components/features/course-questions/question-list";
 
 interface CourseQuestionsPageProps {
@@ -24,7 +27,14 @@ export default async function CourseQuestionsPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const questions = await getCourseQuestions(courseId);
+  const viewerId = user?.id ?? null;
+  const [questions, lastSeenAt] = await Promise.all([
+    getCourseQuestions(courseId),
+    getAnswersLastSeenAt(courseId),
+  ]);
+  const newAnswerIds = questions
+    .filter((question) => isNewAnswerFor(question, viewerId, lastSeenAt))
+    .map((question) => question.id);
 
   return (
     <div className="flex flex-col gap-8">
@@ -51,9 +61,11 @@ export default async function CourseQuestionsPage({
 
       <QuestionList
         questions={questions}
-        viewerId={user?.id ?? null}
+        viewerId={viewerId}
         isOwnerViewer={false}
+        newAnswerIds={newAnswerIds}
       />
+      {newAnswerIds.length > 0 && <MarkAnswersSeen courseId={courseId} />}
     </div>
   );
 }

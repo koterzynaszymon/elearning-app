@@ -6,12 +6,15 @@ interface QuestionListProps {
   readonly questions: readonly CourseQuestion[];
   readonly viewerId: string | null;
   readonly isOwnerViewer: boolean;
+  /** Questions whose answer the learner hasn't seen yet. */
+  readonly newAnswerIds?: readonly string[];
 }
 
 export function QuestionList({
   questions,
   viewerId,
   isOwnerViewer,
+  newAnswerIds = [],
 }: QuestionListProps): React.JSX.Element {
   if (questions.length === 0) {
     return (
@@ -41,6 +44,7 @@ export function QuestionList({
           question={question}
           canAnswer={isOwnerViewer}
           canDelete={isOwnerViewer || question.askedBy.id === viewerId}
+          isNewAnswer={newAnswerIds.includes(question.id)}
         />
       ))}
     </ul>

@@ -15,6 +15,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import {
   answerCourseQuestion,
   deleteCourseQuestion,
@@ -25,6 +26,7 @@ interface QuestionItemProps {
   readonly question: CourseQuestion;
   readonly canAnswer: boolean;
   readonly canDelete: boolean;
+  readonly isNewAnswer?: boolean;
 }
 
 const ANSWER_MAX = 2000;
@@ -41,8 +43,12 @@ export function QuestionItem({
   question,
   canAnswer,
   canDelete,
+  isNewAnswer = false,
 }: QuestionItemProps): React.JSX.Element {
   const router = useRouter();
+  // Captured on mount: marking answers seen refreshes the page and turns the
+  // prop off, but the highlight should stay until the learner navigates away.
+  const [highlightAnswer] = useState(isNewAnswer);
 
   const [isAnswering, setIsAnswering] = useState(false);
   const [answerDraft, setAnswerDraft] = useState(question.answer ?? "");
@@ -152,13 +158,25 @@ export function QuestionItem({
       </p>
 
       {question.answer !== null && !isAnswering && (
-        <div className="flex gap-3 rounded-2xl bg-secondary/60 p-4">
+        <div
+          className={cn(
+            "flex gap-3 rounded-2xl p-4 transition-colors",
+            highlightAnswer
+              ? "bg-mint/10 ring-1 ring-inset ring-mint/40"
+              : "bg-secondary/60",
+          )}
+        >
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint/15 text-mint">
             <GraduationCap className="h-4 w-4" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-bold uppercase tracking-wide text-mint">
+            <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-mint">
               Instructor answer
+              {highlightAnswer && (
+                <span className="rounded-full bg-mint px-2 py-0.5 text-[10px] text-background">
+                  New
+                </span>
+              )}
             </p>
             <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed">
               {question.answer}
