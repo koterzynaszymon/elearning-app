@@ -39,9 +39,18 @@ export function sanitizeLessonHtml(html: string): string {
 }
 
 
-export function isBlankLessonHtml(html: string): boolean {
-  const text = sanitizeHtml(html, { allowedTags: [], allowedAttributes: {} })
+/** The lesson's visible text with every tag stripped. */
+export function lessonPlainText(html: string): string {
+  return sanitizeHtml(html, { allowedTags: [], allowedAttributes: {} })
     .replace(/&nbsp;/g, " ")
     .trim();
-  return text.length === 0;
+}
+
+export function isBlankLessonHtml(html: string): boolean {
+  return lessonPlainText(html).length === 0;
+}
+
+export function countLessonWords(html: string): number {
+  const text = lessonPlainText(html);
+  return text.length === 0 ? 0 : text.split(/\s+/).length;
 }
