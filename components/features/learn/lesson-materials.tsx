@@ -3,6 +3,8 @@ import { AttachmentFileBadge } from "@/components/shared/attachment-file-badge";
 import { attachmentHref, formatFileSize } from "@/lib/supabase/lesson-attachments";
 import type { LessonAttachment } from "@/app/types/lesson";
 
+export const LESSON_MATERIALS_HEADING_ID = "lesson-materials-heading";
+
 interface LessonMaterialsProps {
   readonly attachments: readonly LessonAttachment[];
 }
@@ -14,10 +16,10 @@ export function LessonMaterials({
   if (attachments.length === 0) return null;
 
   return (
-    <section aria-labelledby="lesson-materials-heading" className="flex flex-col gap-3">
+    <section aria-labelledby={LESSON_MATERIALS_HEADING_ID} className="flex flex-col gap-3">
       <h2
-        id="lesson-materials-heading"
-        className="flex items-center gap-2 font-display text-sm font-extrabold uppercase tracking-wider text-muted-foreground"
+        id={LESSON_MATERIALS_HEADING_ID}
+        className="scroll-mt-8 flex items-center gap-2 font-display text-sm font-extrabold uppercase tracking-wider text-muted-foreground"
       >
         <Paperclip className="h-3.5 w-3.5 -rotate-45" />
         Materials

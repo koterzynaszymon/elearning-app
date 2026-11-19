@@ -4,7 +4,9 @@ import { cn } from "@/lib/utils";
 import { LessonAssistant } from "./ai-assist/lesson-assistant";
 import { LessonContent } from "./lesson-content";
 import { LessonCompletionBar } from "./lesson-completion-bar";
-import { LessonMaterials } from "./lesson-materials";
+import { LESSON_MATERIALS_HEADING_ID, LessonMaterials } from "./lesson-materials";
+import { LessonRecapSection } from "./recap/lesson-recap-section";
+import { recapAvailabilityOf } from "./recap/recap-availability";
 import { LessonSpine, lessonHref } from "./lesson-spine";
 import { ProgressDial } from "./progress-dial";
 import type {
@@ -87,6 +89,13 @@ export function LessonReader({
               <LessonContent html={lesson.html} />
             </LessonAssistant>
           </div>
+
+          <LessonRecapSection
+            lessonId={lesson.id}
+            lessonTitle={lesson.title}
+            availability={recapAvailabilityOf(lesson.html, attachments.length)}
+            materialsAnchor={LESSON_MATERIALS_HEADING_ID}
+          />
 
           <LessonMaterials attachments={attachments} />
 
