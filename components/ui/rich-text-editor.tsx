@@ -1,5 +1,6 @@
 "use client";
 
+import { useImperativeHandle } from "react";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
@@ -19,6 +20,12 @@ import {
   Undo2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  insertTextIntoEditor,
+  snapshotSelection,
+  type EditorSelectionSnapshot,
+  type RichTextEditorHandle,
+} from "./rich-text-editor-insert";
 
 interface RichTextEditorProps {
   readonly content: string;
@@ -27,15 +34,12 @@ interface RichTextEditorProps {
   readonly className?: string;
   /**
    * When provided, an "Ask AI" affordance is shown (floating over a selection
-   * and in the toolbar). Receives the plain text the author has highlighted,
-   * or an empty string when nothing is selected.
+   * and in the toolbar). Receives the highlighted text and its document range
+   * (empty text and a `null` range when nothing is selected).
    */
-  readonly onAiAssist?: (selectedText: string) => void;
-}
-
-function getSelectedText(editor: Editor): string {
-  const { from, to } = editor.state.selection;
-  return editor.state.doc.textBetween(from, to, " ").trim();
+  readonly onAiAssist?: (selection: EditorSelectionSnapshot) => void;
+  /** Lets a parent insert text into the document (e.g. an AI answer). */
+  readonly ref?: React.Ref<RichTextEditorHandle>;
 }
 
 interface ToolbarButtonProps {
@@ -82,7 +86,7 @@ function Toolbar({
   onAiAssist,
 }: {
   editor: Editor;
-  onAiAssist?: (selectedText: string) => void;
+  onAiAssist?: (selection: EditorSelectionSnapshot) => void;
 }): React.JSX.Element {
   return (
     <div className="sticky top-0 z-10 flex flex-wrap items-center gap-0.5 rounded-t-2xl border-b border-border bg-card/80 px-2 py-1.5 backdrop-blur">
@@ -90,7 +94,7 @@ function Toolbar({
         <>
           <button
             type="button"
-            onClick={() => onAiAssist(getSelectedText(editor))}
+            onClick={() => onAiAssist(snapshotSelection(editor))}
             aria-label="Ask AI for help"
             title="Ask AI for help"
             className="mr-0.5 flex h-8 items-center gap-1.5 rounded-lg bg-primary/12 px-2.5 text-xs font-bold text-primary transition-colors hover:bg-primary/20"
@@ -184,6 +188,7 @@ export function RichTextEditor({
   placeholder = "Start writing the lesson…",
   className,
   onAiAssist,
+  ref,
 }: RichTextEditorProps): React.JSX.Element {
   const editor = useEditor({
     immediatelyRender: false,
@@ -201,6 +206,15 @@ export function RichTextEditor({
       onChange(instance.getHTML());
     },
   });
+
+  useImperativeHandle(
+    ref,
+    (): RichTextEditorHandle => ({
+      insertText: (text, target) =>
+        editor ? insertTextIntoEditor(editor, text, target) : "empty",
+    }),
+    [editor],
+  );
 
   return (
     <div
@@ -232,7 +246,7 @@ export function RichTextEditor({
         >
           <button
             type="button"
-            onClick={() => onAiAssist(getSelectedText(editor))}
+            onClick={() => onAiAssist(snapshotSelection(editor))}
             className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground shadow-glow transition-transform hover:-translate-y-0.5"
           >
             <Sparkles className="h-3.5 w-3.5" />

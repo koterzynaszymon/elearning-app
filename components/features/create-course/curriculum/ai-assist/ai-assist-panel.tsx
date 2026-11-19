@@ -3,13 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
+  ArrowDownToLine,
   Check,
   Copy,
   CornerDownLeft,
   Quote,
+  Replace,
   Sparkles,
+  TextCursorInput,
   X,
 } from "lucide-react";
+import type { InsertMode, InsertOutcome } from "@/components/ui/rich-text-editor-insert";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAssistDrawerLayout } from "@/components/shared/use-assist-drawer-layout";
@@ -18,6 +22,10 @@ import { AI_HELP_PRESETS } from "./presets";
 import type { AiHelpEntry } from "./types";
 
 const PROMPT_MAX = 500;
+const FEEDBACK_MS = 2200;
+
+/** Puts an answer into the lesson; the panel reports the outcome back. */
+export type InsertAnswerHandler = (entry: AiHelpEntry, mode: InsertMode) => InsertOutcome;
 
 interface AiAssistPanelProps {
   readonly open: boolean;
@@ -27,6 +35,7 @@ interface AiAssistPanelProps {
   readonly entries: readonly AiHelpEntry[];
   readonly isBusy: boolean;
   readonly onSubmit: (prompt: string) => void;
+  readonly onInsertAnswer: InsertAnswerHandler;
 }
 
 export function AiAssistPanel({
@@ -37,6 +46,7 @@ export function AiAssistPanel({
   entries,
   isBusy,
   onSubmit,
+  onInsertAnswer,
 }: AiAssistPanelProps): React.ReactPortal | null {
   const [prompt, setPrompt] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -121,6 +131,7 @@ export function AiAssistPanel({
               key={entry.id}
               entry={entry}
               isLatest={index === entries.length - 1}
+              onInsert={(mode) => onInsertAnswer(entry, mode)}
             />
           ))
         )}
@@ -217,9 +228,14 @@ function EmptyConversation(): React.JSX.Element {
 interface ConversationEntryProps {
   readonly entry: AiHelpEntry;
   readonly isLatest: boolean;
+  readonly onInsert: (mode: InsertMode) => InsertOutcome;
 }
 
-function ConversationEntry({ entry, isLatest }: ConversationEntryProps): React.JSX.Element {
+function ConversationEntry({
+  entry,
+  isLatest,
+  onInsert,
+}: ConversationEntryProps): React.JSX.Element {
   return (
     <article className="animate-pop space-y-2">
       {entry.selection ? (
@@ -239,7 +255,12 @@ function ConversationEntry({ entry, isLatest }: ConversationEntryProps): React.J
           {entry.error}
         </p>
       ) : (
-        <AnswerCard text={entry.answer} animate={isLatest} />
+        <AnswerCard
+          text={entry.answer}
+          animate={isLatest}
+          hasSource={entry.range !== null}
+          onInsert={onInsert}
+        />
       )}
     </article>
   );
@@ -263,9 +284,12 @@ function ThinkingIndicator(): React.JSX.Element {
 interface AnswerCardProps {
   readonly text: string;
   readonly animate: boolean;
+  /** The question came from a highlight, so replace / insert-below make sense. */
+  readonly hasSource: boolean;
+  readonly onInsert: (mode: InsertMode) => InsertOutcome;
 }
 
-function AnswerCard({ text, animate }: AnswerCardProps): React.JSX.Element {
+function AnswerCard({ text, animate, hasSource, onInsert }: AnswerCardProps): React.JSX.Element {
   const shown = useStreamedText(text, animate);
   const [copied, setCopied] = useState(false);
   const tailRef = useRef<HTMLSpanElement>(null);
@@ -292,7 +316,12 @@ function AnswerCard({ text, animate }: AnswerCardProps): React.JSX.Element {
         {shown}
         <span ref={tailRef} aria-hidden />
       </p>
-      <div className="mt-2.5 flex justify-end border-t border-border/70 pt-2">
+      <div className="mt-2.5 flex flex-wrap items-center justify-end gap-1 border-t border-border/70 pt-2">
+        <InsertActions
+          hasSource={hasSource}
+          disabled={shown.length < text.length}
+          onInsert={onInsert}
+        />
         <button
           type="button"
           onClick={() => void copy()}
@@ -312,6 +341,103 @@ function AnswerCard({ text, animate }: AnswerCardProps): React.JSX.Element {
         </button>
       </div>
     </div>
+  );
+}
+
+type InsertFeedback = { readonly tone: "ok" | "warn"; readonly label: string } | null;
+
+const INSERT_FEEDBACK: Record<InsertMode, string> = {
+  replace: "Replaced",
+  after: "Added below",
+  cursor: "Inserted",
+};
+
+function feedbackFor(mode: InsertMode, outcome: InsertOutcome): InsertFeedback {
+  if (outcome === "empty") return null;
+  if (outcome === "fallback-cursor") {
+    return { tone: "warn", label: "Passage changed, inserted at cursor" };
+  }
+  return { tone: "ok", label: INSERT_FEEDBACK[mode] };
+}
+
+interface InsertActionsProps {
+  readonly hasSource: boolean;
+  readonly disabled: boolean;
+  readonly onInsert: (mode: InsertMode) => InsertOutcome;
+}
+
+function InsertActions({ hasSource, disabled, onInsert }: InsertActionsProps): React.JSX.Element {
+  const [feedback, setFeedback] = useState<InsertFeedback>(null);
+
+  useEffect(() => {
+    if (!feedback) return;
+    const id = window.setTimeout(() => setFeedback(null), FEEDBACK_MS);
+    return () => window.clearTimeout(id);
+  }, [feedback]);
+
+  function run(mode: InsertMode): void {
+    setFeedback(feedbackFor(mode, onInsert(mode)));
+  }
+
+  if (feedback) {
+    return (
+      <span
+        role="status"
+        className={cn(
+          "mr-auto inline-flex items-center gap-1.5 px-1 text-[11px] font-semibold",
+          feedback.tone === "ok" ? "text-mint" : "text-amber-600 dark:text-amber-400",
+        )}
+      >
+        <Check className="h-3 w-3" />
+        {feedback.label}
+      </span>
+    );
+  }
+
+  return (
+    <div className="mr-auto flex flex-wrap items-center gap-1">
+      {hasSource ? (
+        <>
+          <InsertButton icon={Replace} label="Replace" disabled={disabled} onClick={() => run("replace")} primary />
+          <InsertButton icon={ArrowDownToLine} label="Insert below" disabled={disabled} onClick={() => run("after")} />
+        </>
+      ) : (
+        <InsertButton icon={TextCursorInput} label="Insert at cursor" disabled={disabled} onClick={() => run("cursor")} primary />
+      )}
+    </div>
+  );
+}
+
+interface InsertButtonProps {
+  readonly icon: React.ComponentType<{ className?: string }>;
+  readonly label: string;
+  readonly disabled: boolean;
+  readonly primary?: boolean;
+  readonly onClick: () => void;
+}
+
+function InsertButton({
+  icon: Icon,
+  label,
+  disabled,
+  primary = false,
+  onClick,
+}: InsertButtonProps): React.JSX.Element {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-40",
+        primary
+          ? "bg-primary/12 text-primary hover:bg-primary/20"
+          : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+      )}
+    >
+      <Icon className="h-3 w-3" />
+      {label}
+    </button>
   );
 }
 

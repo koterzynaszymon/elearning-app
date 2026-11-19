@@ -1,3 +1,5 @@
+import type { EditorRange } from "@/components/ui/rich-text-editor-insert";
+
 export type AiHelpPreset = {
   readonly id: string;
   readonly label: string;
@@ -13,8 +15,9 @@ export type AiHelpStatus = "pending" | "done" | "error";
 export type AiHelpEntry = {
   readonly id: string;
   readonly lessonId: string;
-  /** Empty string means the author asked a general question with no highlight. */
   readonly selection: string;
+  /** Where `selection` sat in the document when asked; `null` without a highlight. */
+  readonly range: EditorRange | null;
   readonly prompt: string;
   readonly createdAt: number;
   readonly status: AiHelpStatus;

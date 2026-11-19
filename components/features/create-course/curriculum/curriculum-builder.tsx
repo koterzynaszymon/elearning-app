@@ -236,7 +236,7 @@ export function CurriculumBuilder({
             onNext={() => goRelative(1)}
             attachments={
               <LessonAttachmentsTray
-                key={activeLesson.id}
+                key={`attachments-${activeLesson.id}`}
                 lessonId={activeLesson.id}
                 attachments={attachments[activeLesson.id] ?? NO_ATTACHMENTS}
                 onAttachmentsChange={updateAttachments}

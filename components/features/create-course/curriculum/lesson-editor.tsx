@@ -1,12 +1,25 @@
 "use client";
 
+import { useCallback, useRef } from "react";
 import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import type {
+  InsertMode,
+  InsertOutcome,
+  InsertTarget,
+  RichTextEditorHandle,
+} from "@/components/ui/rich-text-editor-insert";
 import { cn } from "@/lib/utils";
 import { AiAssistPanel } from "./ai-assist/ai-assist-panel";
 import { useLessonAiAssist } from "./ai-assist/use-lesson-ai-assist";
+import type { AiHelpEntry } from "./ai-assist/types";
 import type { LessonDraft } from "./types";
+
+function insertTargetFor(entry: AiHelpEntry, mode: InsertMode): InsertTarget {
+  if (mode === "cursor" || entry.range === null) return { mode: "cursor" };
+  return { mode, range: entry.range, expectedText: entry.selection };
+}
 
 const TITLE_MAX = 100;
 
@@ -39,6 +52,13 @@ export function LessonEditor({
     lessonId: lesson.id,
     lessonTitle: lesson.title,
   });
+
+  const editorRef = useRef<RichTextEditorHandle>(null);
+  const insertAnswer = useCallback(
+    (entry: AiHelpEntry, mode: InsertMode): InsertOutcome =>
+      editorRef.current?.insertText(entry.answer, insertTargetFor(entry, mode)) ?? "empty",
+    [],
+  );
 
   return (
     <section className="flex min-w-0 flex-col gap-4">
@@ -88,7 +108,11 @@ export function LessonEditor({
       </div>
 
       <RichTextEditor
-        key={lesson.id}
+        // Prefixed: `attachments` is rendered beside this and is keyed by the
+        // lesson id too. Sibling keys must differ or React loses track of one
+        // and leaves the old editor in the DOM on every lesson switch.
+        key={`editor-${lesson.id}`}
+        ref={editorRef}
         content={lesson.content}
         onChange={onContentChange}
         onAiAssist={assist.openWithSelection}
@@ -106,6 +130,7 @@ export function LessonEditor({
         entries={assist.entries}
         isBusy={assist.isBusy}
         onSubmit={assist.submit}
+        onInsertAnswer={insertAnswer}
       />
     </section>
   );

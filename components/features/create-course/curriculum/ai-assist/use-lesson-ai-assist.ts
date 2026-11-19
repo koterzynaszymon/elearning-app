@@ -1,6 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type {
+  EditorRange,
+  EditorSelectionSnapshot,
+} from "@/components/ui/rich-text-editor-insert";
 import { lessonAiService } from "./lesson-ai-service";
 import type { AiHelpEntry } from "./types";
 
@@ -17,7 +21,7 @@ export interface LessonAiAssist {
   readonly entries: readonly AiHelpEntry[];
   readonly isBusy: boolean;
   /** Open the panel seeded with the text the author highlighted. */
-  readonly openWithSelection: (selection: string) => void;
+  readonly openWithSelection: (selection: EditorSelectionSnapshot) => void;
   /** Open the panel for a general question (no highlight). */
   readonly open: () => void;
   readonly close: () => void;
@@ -31,6 +35,7 @@ export function useLessonAiAssist({
 }: UseLessonAiAssistArgs): LessonAiAssist {
   const [isOpen, setIsOpen] = useState(false);
   const [pendingSelection, setPendingSelection] = useState("");
+  const [pendingRange, setPendingRange] = useState<EditorRange | null>(null);
   const [entriesByLesson, setEntriesByLesson] = useState<
     Record<string, readonly AiHelpEntry[]>
   >({});
@@ -39,6 +44,7 @@ export function useLessonAiAssist({
   // selection but keep each lesson's history so they can flip back to it.
   useEffect(() => {
     setPendingSelection("");
+    setPendingRange(null);
   }, [lessonId]);
 
   const lessonTitleRef = useRef(lessonTitle);
@@ -49,8 +55,9 @@ export function useLessonAiAssist({
   const entries = entriesByLesson[lessonId] ?? NO_ENTRIES;
   const isBusy = entries.some((entry) => entry.status === "pending");
 
-  const openWithSelection = useCallback((selection: string): void => {
-    setPendingSelection(selection.trim());
+  const openWithSelection = useCallback((selection: EditorSelectionSnapshot): void => {
+    setPendingSelection(selection.text);
+    setPendingRange(selection.range);
     setIsOpen(true);
   }, []);
 
@@ -64,6 +71,7 @@ export function useLessonAiAssist({
 
   const clearSelection = useCallback((): void => {
     setPendingSelection("");
+    setPendingRange(null);
   }, []);
 
   const patchEntry = useCallback(
@@ -93,6 +101,7 @@ export function useLessonAiAssist({
         id,
         lessonId: targetLesson,
         selection,
+        range: selection.length > 0 ? pendingRange : null,
         prompt: trimmed,
         createdAt: Date.now(),
         status: "pending",
@@ -132,7 +141,7 @@ export function useLessonAiAssist({
           });
         });
     },
-    [lessonId, patchEntry, pendingSelection],
+    [lessonId, patchEntry, pendingSelection, pendingRange],
   );
 
   return useMemo(
