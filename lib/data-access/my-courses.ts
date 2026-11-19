@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getUnreadAnswerCounts } from "@/lib/data-access/question-reads";
 import type { EnrolledCourse } from "@/app/types/my-courses";
+import type { UnreadAnswerCounts } from "@/app/types/course-questions";
 
 type EnrolledCourseRow = {
   course_id: string;
@@ -15,7 +17,10 @@ type EnrolledCourseRow = {
   last_activity_at: string | null;
 };
 
-function mapEnrolledCourse(row: EnrolledCourseRow): EnrolledCourse {
+function mapEnrolledCourse(
+  row: EnrolledCourseRow,
+  unreadAnswers: UnreadAnswerCounts,
+): EnrolledCourse {
   return {
     id: row.course_id,
     title: row.course_title,
@@ -26,17 +31,23 @@ function mapEnrolledCourse(row: EnrolledCourseRow): EnrolledCourse {
     completedLessons: row.completed_lessons,
     enrolledAt: row.enrolled_at,
     lastActivityAt: row.last_activity_at,
+    unreadAnswers: unreadAnswers[row.course_id] ?? 0,
   };
 }
 
 export async function getEnrolledCourses(): Promise<readonly EnrolledCourse[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("get_enrolled_courses");
+  const [{ data, error }, unreadAnswers] = await Promise.all([
+    supabase.rpc("get_enrolled_courses"),
+    getUnreadAnswerCounts(),
+  ]);
 
   if (error) {
     console.error(error);
     return [];
   }
 
-  return (data as EnrolledCourseRow[]).map(mapEnrolledCourse);
+  return (data as EnrolledCourseRow[]).map((row) =>
+    mapEnrolledCourse(row, unreadAnswers),
+  );
 }

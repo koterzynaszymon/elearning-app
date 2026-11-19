@@ -16,6 +16,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/shared/logo";
+import { UnreadBadge } from "@/components/shared/unread-badge";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Button } from "@/components/ui/button";
 
@@ -23,11 +24,12 @@ interface NavItem {
   href: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
+  showsUnreadAnswers?: boolean;
 }
 
 const NAV_ITEMS: readonly NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/courses", label: "My courses", icon: BookOpen },
+  { href: "/dashboard/courses", label: "My courses", icon: BookOpen, showsUnreadAnswers: true },
   { href: "/dashboard/explore", label: "Explore", icon: Compass },
   { href: "/dashboard/author-space", label: "Author space", icon: Presentation },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
@@ -35,10 +37,12 @@ const NAV_ITEMS: readonly NavItem[] = [
 
 interface DashboardSidebarProps {
   userEmail: string;
+  unreadAnswers: number;
 }
 
 export function DashboardSidebar({
   userEmail,
+  unreadAnswers,
 }: DashboardSidebarProps): React.JSX.Element {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -54,8 +58,15 @@ export function DashboardSidebar({
             size="icon"
             onClick={() => setMobileOpen(true)}
             aria-label="Open menu"
+            className="relative"
           >
             <Menu className="h-4 w-4" />
+            {unreadAnswers > 0 && (
+              <span
+                aria-hidden
+                className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-primary ring-2 ring-background"
+              />
+            )}
           </Button>
         </div>
       </div>
@@ -83,6 +94,7 @@ export function DashboardSidebar({
             </div>
             <SidebarBody
               userEmail={userEmail}
+              unreadAnswers={unreadAnswers}
               onNavigate={() => setMobileOpen(false)}
             />
           </div>
@@ -94,7 +106,11 @@ export function DashboardSidebar({
         <div className="px-2">
           <Logo />
         </div>
-        <SidebarBody userEmail={userEmail} className="mt-7" />
+        <SidebarBody
+          userEmail={userEmail}
+          unreadAnswers={unreadAnswers}
+          className="mt-7"
+        />
       </aside>
     </>
   );
@@ -102,10 +118,12 @@ export function DashboardSidebar({
 
 function SidebarBody({
   userEmail,
+  unreadAnswers,
   className,
   onNavigate,
 }: {
   userEmail: string;
+  unreadAnswers: number;
   className?: string;
   onNavigate?: () => void;
 }): React.JSX.Element {
@@ -127,7 +145,7 @@ function SidebarBody({
         Menu
       </p>
       <nav className="flex flex-col gap-1.5">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+        {NAV_ITEMS.map(({ href, label, icon: Icon, showsUnreadAnswers }) => {
           const active = isActive(href);
           return (
             <Link
@@ -148,6 +166,13 @@ function SidebarBody({
                 )}
               />
               {label}
+              {showsUnreadAnswers && (
+                <UnreadBadge
+                  count={unreadAnswers}
+                  inverted={active}
+                  className="ml-auto"
+                />
+              )}
             </Link>
           );
         })}

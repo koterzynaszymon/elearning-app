@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getUnreadAnswerCounts } from "@/lib/data-access/question-reads";
+import { totalUnreadAnswers } from "@/lib/unread-answers";
 import { DashboardSidebar } from "@/components/features/dashboard/dashboard-sidebar";
 import { SidebarFallback } from "@/components/features/dashboard/sidebar-fallback";
 
@@ -39,6 +41,7 @@ async function SessionSidebar(): Promise<React.JSX.Element> {
     typeof data.claims.email === "string"
       ? data.claims.email
       : FALLBACK_USER_LABEL;
+  const unreadAnswers = totalUnreadAnswers(await getUnreadAnswerCounts());
 
-  return <DashboardSidebar userEmail={userEmail} />;
+  return <DashboardSidebar userEmail={userEmail} unreadAnswers={unreadAnswers} />;
 }

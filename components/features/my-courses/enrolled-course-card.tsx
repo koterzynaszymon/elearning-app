@@ -7,11 +7,13 @@ import {
   CheckCircle2,
   Globe,
   Lock,
+  MessageCircleReply,
   PlayCircle,
   RotateCcw,
   Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { UnreadBadge } from "@/components/shared/unread-badge";
 import {
   courseProgressPercent,
   courseProgressStatus,
@@ -126,8 +128,18 @@ export function EnrolledCourseCard({
 
       {/* Body */}
       <div className="flex flex-1 flex-col p-5">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <StatusBadge status={status} />
+          {course.unreadAnswers > 0 && (
+            <Link
+              href={`/dashboard/courses/${course.id}/questions`}
+              className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 py-0.5 pl-2.5 pr-1 text-[10px] font-bold uppercase tracking-wide text-primary transition-colors hover:bg-primary/15"
+            >
+              <MessageCircleReply className="h-2.5 w-2.5" />
+              {course.unreadAnswers === 1 ? "New answer" : "New answers"}
+              <UnreadBadge count={course.unreadAnswers} />
+            </Link>
+          )}
         </div>
 
         <h3 className="mt-2.5 line-clamp-2 break-words font-display text-lg font-extrabold leading-tight">

@@ -10,3 +10,6 @@ export type CourseQuestion = {
   readonly answeredAt: string | null;
   readonly createdAt: string;
 };
+
+/** Course id → number of the learner's answered questions they haven't seen. */
+export type UnreadAnswerCounts = Readonly<Record<string, number>>;

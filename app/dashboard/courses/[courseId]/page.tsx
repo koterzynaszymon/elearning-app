@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { GraduationCap } from "lucide-react";
 import { getCourseSyllabus } from "@/lib/data-access/learn";
+import { getUnreadAnswerCounts } from "@/lib/data-access/question-reads";
 import { CourseSyllabus } from "@/components/features/learn/course-syllabus";
 import { SyllabusSkeleton } from "@/components/features/learn/learn-skeletons";
 
@@ -23,7 +24,10 @@ async function SyllabusContent({
   params,
 }: CourseOverviewPageProps): Promise<React.JSX.Element> {
   const { courseId } = await params;
-  const view = await getCourseSyllabus(courseId);
+  const [view, unreadAnswers] = await Promise.all([
+    getCourseSyllabus(courseId),
+    getUnreadAnswerCounts(),
+  ]);
   if (view === null) {
     notFound();
   }
@@ -51,6 +55,7 @@ async function SyllabusContent({
         course={course}
         lessons={lessons}
         ratingSummary={ratingSummary}
+        unreadAnswers={unreadAnswers[courseId] ?? 0}
       />
     </div>
   );

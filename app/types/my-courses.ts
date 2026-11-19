@@ -12,4 +12,6 @@ export type EnrolledCourse = {
   readonly enrolledAt: string;
   /** ISO date string of the last completion, or null if there is none yet. */
   readonly lastActivityAt: string | null;
+  /** Answers to the learner's own questions they haven't opened yet. */
+  readonly unreadAnswers: number;
 };

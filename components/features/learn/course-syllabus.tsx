@@ -17,6 +17,7 @@ import { lessonHref } from "./lesson-spine";
 import { ProgressDial } from "./progress-dial";
 import { LeaveCourseButton } from "./leave-course-button";
 import { CourseRating } from "./course-rating";
+import { UnreadBadge } from "@/components/shared/unread-badge";
 import type {
   CourseRatingSummary,
   LearnerCourse,
@@ -27,6 +28,7 @@ interface CourseSyllabusProps {
   readonly course: LearnerCourse;
   readonly lessons: readonly LessonSpineItem[];
   readonly ratingSummary: CourseRatingSummary;
+  readonly unreadAnswers: number;
 }
 
 interface ContinueTarget {
@@ -50,6 +52,7 @@ export function CourseSyllabus({
   course,
   lessons,
   ratingSummary,
+  unreadAnswers,
 }: CourseSyllabusProps): React.JSX.Element {
   if (lessons.length === 0) {
     return <NoLessonsYet />;
@@ -162,6 +165,7 @@ export function CourseSyllabus({
           >
             <MessageCircleQuestion className="h-4 w-4" />
             Course Q&amp;A
+            <UnreadBadge count={unreadAnswers} />
           </Link>
 
           {!course.isEnrolled && <NotEnrolledNote />}
