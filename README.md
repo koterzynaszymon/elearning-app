@@ -1,109 +1,190 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# AI-Assisted E-learning Platform
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
+An e-learning platform where instructors author courses and students learn from them, with an AI assistant built into both sides: it helps authors write lessons and helps students understand them.
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+Built as an engineering graduation project (*praca inżynierska*).
+
+**Stack:** Next.js 15 (App Router) · TypeScript 5 (strict) · Supabase (PostgreSQL, Auth, Storage, Row Level Security) · Tailwind CSS · shadcn/ui · Tiptap · Vitest
+
+---
 
 ## Features
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Proxy
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+### For instructors
+- **Course authoring:** drafts, a curriculum builder with ordered lessons, a rich-text lesson editor (Tiptap), and a publish flow
+- **Course settings:** category, level, description, and **private courses** protected by a password
+- **Lesson attachments** stored in a private Storage bucket, downloaded through signed URLs
+- **Student roster** with per-student progress
+- **AI author assist** in the lesson editor; the author can insert generated answers straight into the lesson
 
-## Demo
+### For students
+- **Explore catalogue** with search and category, level and rating filters
+- **Enrolling in and leaving** courses (private courses need the password)
+- **Lesson reader** with progress tracking
+- **Course Q&A:** ask the instructor questions, with unread-answer badges
+- **Ratings** for completed courses
+- **AI lesson assist:** ask about the current lesson or a selected passage
+- **Lesson recap:** an AI summary and review questions
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+### Shared
+- Email and password auth with Supabase SSR (cookie sessions)
+- Profile with avatar upload
+- Light and dark themes
 
-## Deploy to Vercel
+---
 
-Vercel deployment will guide you through creating a Supabase account and project.
+## AI integration
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+> **Current state:** the AI features run on a **local LLM through [Ollama](https://ollama.com)**. A hosted model API will be connected later.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+The AI features sit behind service interfaces, so the UI does not depend on which model provider is used:
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+| Feature | Service |
+|---|---|
+| Author assist in the lesson editor | `components/features/create-course/curriculum/ai-assist/lesson-ai-service.ts` |
+| Student "ask about this lesson / selection" | `components/features/learn/ai-assist/lesson-ai-service.ts` |
+| Lesson summary and review questions | `components/features/learn/recap/lesson-recap-service.ts` |
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
+Every service returns a `Result<T, E>` value instead of throwing, so the UI handles success and failure explicitly. Switching from Ollama to a hosted API means replacing one provider adapter; the components that call it stay the same.
 
-## Clone and run locally
+**Planned:**
+- Hosted LLM API behind the same adapter, with the API key kept on the server only
+- Rate limiting on AI requests, plus an AI usage log (used for both limits and thesis metrics)
+- Prompts grounded in the lesson text, with defences against prompt injection from lesson content and selections
+- Caching recaps per lesson version
 
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
+---
 
-2. Create a Next.js app using the Supabase Starter template npx command
+## Architecture
 
-   ```bash
-   npx create-next-app --example with-supabase with-supabase-app
-   ```
+```
+┌──────────────────────── Next.js App Router ────────────────────────┐
+│  Server Components         Server Actions        Client Components │
+│  data fetching,            mutations,            interactive UI,   │
+│  auth checks, layouts      Result<T, E>          uploads           │
+└──────────────┬──────────────────────┬──────────────────────────────┘
+               │ @supabase/ssr        │ AI service interface
+┌──────────────▼──────────────┐  ┌────▼───────────────────────────────┐
+│ Supabase                    │  │ LLM provider adapter               │
+│ PostgreSQL + RLS · Auth ·   │  │ now: Ollama (local)                │
+│ Storage (avatars, attachm.) │  │ later: hosted API                  │
+└─────────────────────────────┘  └────────────────────────────────────┘
+```
 
-   ```bash
-   yarn create next-app --example with-supabase with-supabase-app
-   ```
+Key decisions:
+- **Security is enforced in the database.** Every table has RLS enabled. Private courses, lessons and attachments are protected by policies, not only by UI routing.
+- **Sessions use cookies.** They are refreshed in `proxy.ts` (Next.js middleware) through `@supabase/ssr`.
+- **Server Components use the server Supabase client** (`lib/supabase/server.ts`). The browser client is only used for uploads and interactive features.
+- **Components follow atomic design:** `components/ui` (primitives) → `components/shared` (reusable molecules) → `components/features/<feature>` (feature organisms) → `app/` (page composition only).
 
-   ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
-   ```
+---
 
-3. Use `cd` to change into the app's directory
+## Project structure
 
-   ```bash
-   cd with-supabase-app
-   ```
+```
+app/
+  auth/              login, sign-up, password reset, email confirmation
+  dashboard/         courses, create-course, author-space, explore,
+                     settings, attachments (signed-URL download route)
+components/
+  ui/                shadcn/ui primitives
+  shared/            reusable components
+  features/          auth, author-space, course-questions, create-course,
+                     dashboard, explore, landing, learn, my-courses, settings
+lib/
+  data-access/       typed query functions (getCourseWithLessons, ...)
+  security/          HTML sanitisation for lesson content
+  supabase/          server and browser clients
+  database.types.ts  generated Supabase types
+supabase/
+  migrations/        schema, RLS policies, storage buckets, triggers
+```
 
-4. Rename `.env.example` to `.env.local` and update the following:
+---
 
-  ```env
-  NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[INSERT SUPABASE PROJECT API PUBLISHABLE OR ANON KEY]
-  ```
-  > [!NOTE]
-  > This example uses `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, which refers to Supabase's new **publishable** key format.
-  > Both legacy **anon** keys and new **publishable** keys can be used with this variable name during the transition period. Supabase's dashboard may show `NEXT_PUBLIC_SUPABASE_ANON_KEY`; its value can be used in this example.
-  > See the [full announcement](https://github.com/orgs/supabase/discussions/29260) for more information.
+## Getting started
 
-  Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
+### Requirements
+- Node.js 20+
+- [Supabase CLI](https://supabase.com/docs/guides/cli) and Docker (for the local Supabase stack)
+- [Ollama](https://ollama.com/download) with a model pulled
 
-5. You can now run the Next.js local development server:
+### 1. Install dependencies
+```bash
+npm install
+```
 
-   ```bash
-   npm run dev
-   ```
+### 2. Start Supabase locally
+```bash
+supabase start      # DB, Auth, Storage and Studio
+supabase db reset   # apply all migrations
+```
+`supabase start` prints the local API URL and keys.
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+### 3. Start Ollama
+```bash
+ollama pull <model>   # e.g. llama3.1:8b
+ollama serve          # listens on http://localhost:11434
+```
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+### 4. Configure environment variables
+Copy `.env.example` to `.env.local` and fill in:
+```env
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<publishable or anon key>
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+# Server-only, never prefix with NEXT_PUBLIC_
+SUPABASE_SERVICE_ROLE_KEY=<service role key>
 
-## Feedback and issues
+# Local LLM
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=<model>
+```
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+### 5. Run the app
+```bash
+npm run dev
+```
+The app runs at [http://localhost:3000](http://localhost:3000).
 
-## More Supabase examples
+---
 
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+## Scripts
+
+| Command | Description |
+|---|---|
+| `npm run dev` | Start the dev server on port 3000 |
+| `npm run build` | Production build |
+| `npm start` | Serve the production build |
+| `npm run lint` | ESLint |
+| `npx tsc --noEmit` | Type-check |
+| `npm test` | Run Vitest unit tests once |
+| `npm run test:watch` | Vitest in watch mode |
+| `supabase migration new <name>` | Create a new migration |
+| `supabase gen types typescript --local > lib/database.types.ts` | Regenerate DB types |
+
+Unit tests are colocated with the source as `*.test.ts`.
+
+---
+
+## Project status
+
+| Phase | Status |
+|---|---|
+| 0. Scaffolding (Next.js and shadcn/ui) | ✅ Done |
+| 1. Database modelling and RLS | ✅ Done |
+| 2. Auth and Supabase SSR | ✅ Done |
+| 3. Instructor dashboard | ✅ Done |
+| 4. Student view and resource protection | ✅ Done |
+| 5. LLM integration | 🟡 In progress: local Ollama connected, hosted API next |
+| 6. Optimisation, testing and thesis documentation | 🟡 Started |
+
+See [ROADMAP.md](ROADMAP.md) for the detailed plan.
+
+---
+
+## Security notes
+- `SUPABASE_SERVICE_ROLE_KEY` and LLM API keys stay on the server only.
+- Lesson HTML is sanitised before it is rendered (`lib/security/sanitize-html.ts`).
+- Uploaded file paths are validated before Storage operations, and attachments are served only through short-lived signed URLs.
+- Rate limiting on AI endpoints is required before a production deployment.
